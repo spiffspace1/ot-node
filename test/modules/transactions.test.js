@@ -80,10 +80,10 @@ describe('Transactions class object tests', () => {
         expect(balance).to.equal('5999999999999999');
 
         const options = {
-            gasLimit: web3.utils.toHex(gasLimit),
+            gas: web3.utils.toHex(gasLimit),
             gasPrice: web3.utils.toHex(gasPrice),
-            to: this.tokenContractAddress,
             value: '1',
+            chainId: 5777,
         };
 
         const logger = console;
@@ -102,15 +102,9 @@ describe('Transactions class object tests', () => {
                 type: 'function',
             },
         ];
-        try {
-            // Transaction should fail because of the false ABI.
-            await transactions.queueTransaction(dummyAbi, 'dummyMethod', [], options);
-        } catch (error) {
-            expect(warnings).to.have.lengthOf(1);
-            expect(warnings[0]).to.equal('ETH balance running low! Your balance: 5999999999999999  wei, while minimum required is: 6000000000000000 wei');
-            return;
-        }
-        throw Error('Transaction should fail.');
+        await transactions.queueTransaction(dummyAbi, 'dummyMethod', [], options);
+        expect(warnings).to.have.lengthOf(1);
+        expect(warnings[0]).to.equal('ETH balance running low! Your balance: 5999999999999999  wei, while minimum required is: 6000000000000000 wei');
     });
 
     it('Should fail with warning for transactions if wallet has less than 300k * gasPrice', async () => {
@@ -134,14 +128,15 @@ describe('Transactions class object tests', () => {
             gas: 21000,
             gasPrice,
         });
+
         balance = await web3.eth.getBalance(testWallet);
         expect(balance).to.equal('5999999999999999');
 
         const options = {
-            gasLimit: web3.utils.toHex(gasLimit),
+            gas: web3.utils.toHex(gasLimit),
             gasPrice: web3.utils.toHex(gasPrice),
-            to: this.tokenContractAddress,
             value: '1',
+            chainId: 5777,
         };
 
         const logger = console;
