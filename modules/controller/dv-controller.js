@@ -156,8 +156,10 @@ class DVController {
                 price_in_trac: element.price_in_trac,
                 purchase_id: element.purchase_id,
                 timestamp: element.timestamp,
+                price: element.price,
                 type,
                 status: element.status,
+                blockchain_id: element.blockchain_id,
             });
         });
 

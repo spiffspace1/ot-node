@@ -51,22 +51,7 @@ class DvPurchaseRequestCommand extends Command {
             if (blockchain_id) {
                 error += `, blockchain ${blockchain_id}`;
             }
-            this.logger.error(error);
-            await Models.handler_ids.update(
-                {
-                    status: 'FAILED',
-                    data: JSON.stringify({
-                        error,
-                    }),
-                },
-                {
-                    where: {
-                        handler_id,
-                    },
-                },
-            );
-
-            this.remoteControl.purchaseStatus('Purchase initiation failed', 'Unable to find data seller. Please try again.', true);
+            await this._handleError(error, handler_id);
             return Command.empty();
         }
 

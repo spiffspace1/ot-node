@@ -50,7 +50,7 @@ class DVPermissionedDataReadRequestCommand extends Command {
 
         const result = await this.transport.sendPermissionedDataReadRequest(
             dataReadRequestObject,
-            seller_node_id,
+            Utilities.denormalizeHex(seller_node_id),
         );
 
         if (result && result.status === 'FAIL') {
