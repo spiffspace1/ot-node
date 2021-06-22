@@ -116,14 +116,19 @@ class DVController {
             });
         }
         // todo pass blockchain identity
-        const normalizedIdentity = this.profileService.getIdentity();
+        const allMyIdentities = [];
+        this.blockchain.getAllBlockchainIds()
+            .forEach(id => allMyIdentities.push(this.profileService.getIdentity(id)));
         const whereCondition = {};
         if (requestedType === this.trading_type_purchased) {
-            whereCondition.buyer_erc_id = normalizedIdentity;
+            whereCondition.buyer_erc_id = {
+                [Models.Sequelize.Op.in]: allMyIdentities,
+            };
         } else if (requestedType === this.trading_type_sold) {
-            whereCondition.seller_erc_id = normalizedIdentity;
+            whereCondition.seller_erc_id = {
+                [Models.Sequelize.Op.in]: allMyIdentities,
+            };
         }
-
         const tradingData = await Models.data_trades.findAll({
             where: whereCondition,
             order: [
@@ -140,7 +145,7 @@ class DVController {
         tradingData.forEach((element) => {
             const { datasetHeader } =
                 allMetadata.find(metadata => metadata._key === element.data_set_id);
-            const type = normalizedIdentity === element.buyer_erc_id ? 'PURCHASED' : 'SOLD';
+            const type = allMyIdentities.includes(element.buyer_erc_id) ? 'PURCHASED' : 'SOLD';
             returnArray.push({
                 data_set: {
                     id: element.data_set_id,

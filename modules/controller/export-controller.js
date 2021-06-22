@@ -49,6 +49,7 @@ class ExportController {
             response.send({
                 message: 'Bad request, dataset_id is not provided',
             });
+            return;
         }
         const datasetId = request.body.dataset_id;
         const requested_dataset = await Models.data_info.findOne({
