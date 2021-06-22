@@ -321,7 +321,17 @@ class PermissionedDataService {
             const block = dataElement.slice(dataElement.length - block_size, dataElement.length);
             originalDataString += block.toString();
         }
-
+        // preserve newlines, etc - use valid JSON
+        originalDataString = originalDataString.replace(/\\n/g, '\\n')
+            .replace(/\\'/g, "\\'")
+            .replace(/\\"/g, '\\"')
+            .replace(/\\&/g, '\\&')
+            .replace(/\\r/g, '\\r')
+            .replace(/\\t/g, '\\t')
+            .replace(/\\b/g, '\\b')
+            .replace(/\\f/g, '\\f');
+        // remove non-printable and other non-valid JSON chars
+        originalDataString = originalDataString.replace(/[^\x20-\x7E]/g, '');
         return JSON.parse(originalDataString);
     }
 
