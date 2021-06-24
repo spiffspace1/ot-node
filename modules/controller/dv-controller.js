@@ -494,21 +494,24 @@ class DVController {
             });
 
             allDatasets.forEach((datasetId) => {
-                const { datasetHeader } = allMetadata.find(metadata => metadata._key === datasetId);
-                const dataInfo = dataInfos.find(info => info.data_set_id === datasetId);
-                not_owned_objects[datasetId].metadata = {
-                    datasetTitle: datasetHeader.datasetTitle,
-                    datasetTags: datasetHeader.datasetTags,
-                    datasetDescription: datasetHeader.datasetDescription,
-                    timestamp: dataInfo.import_timestamp,
-                    creator_identities: ImportUtilities.extractDatasetIdentities(datasetHeader),
-                    creator_wallets: dataInfo.data_provider_wallets,
-                };
+                const datasetMetadata = allMetadata.find(metadata => metadata._key === datasetId);
+                if (datasetMetadata) {
+                    const { datasetHeader } = datasetMetadata;
+                    const dataInfo = dataInfos.find(info => info.data_set_id === datasetId);
+                    not_owned_objects[datasetId].metadata = {
+                        datasetTitle: datasetHeader.datasetTitle,
+                        datasetTags: datasetHeader.datasetTags,
+                        datasetDescription: datasetHeader.datasetDescription,
+                        timestamp: dataInfo.import_timestamp,
+                        creator_identities: ImportUtilities.extractDatasetIdentities(datasetHeader),
+                        creator_wallets: dataInfo.data_provider_wallets,
+                    };
+                }
             });
 
             for (const dataset in not_owned_objects) {
                 for (const data_seller in not_owned_objects[dataset]) {
-                    if (data_seller !== 'metadata') {
+                    if (data_seller !== 'metadata' && not_owned_objects[dataset].metadata) {
                         result.push({
                             seller_node_id: data_seller,
                             timestamp: (new Date(not_owned_objects[dataset].metadata.timestamp))
