@@ -10,6 +10,7 @@
       {
         "blockchainTitle": "Polygon",
         "networkId": "polygon::mainnet",
+        "publicKey": "0xFA421f2b10FBebaAeC281eb6734b0fA9Cc8dbbD7",
         "hubContractAddress": "0xFA421f2b10FBebaAeC281eb6734b0fA9Cc8dbbD7",
         "rpcEndpoints": [
           "https://rpc-mumbai.maticvigil.com/"

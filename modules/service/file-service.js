@@ -3,10 +3,6 @@ const { exists, mkdir } = require('fs');
 const fs = require('fs');
 
 class FileService {
-    constructor(ctx) {
-        this.config = ctx.config;
-    }
-
     getFileExtension(fileName) {
         return path.extname(fileName).toLowerCase();
     }
@@ -72,32 +68,6 @@ class FileService {
                 }
             });
         });
-    }
-
-    removeFile(filePath) {
-        return new Promise((resolve, reject) => {
-            exists(filePath, (exists) => {
-                if (exists) {
-                    fs.unlink(filePath, (err) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve();
-                        }
-                    });
-                } else {
-                    reject(new Error(`Unable to delete file on path ${filePath}, there's no such file.`))
-                }
-            });
-        });
-    }
-
-    getHandlerIdCachePath() {
-        return path.join(this.config.appDataPath, 'handler_id_cache');
-    }
-
-    getHandlerIdDocumentPath(handlerId) {
-        return path.join(this.getHandlerIdCachePath(), handlerId);
     }
 }
 

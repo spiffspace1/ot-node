@@ -24,7 +24,7 @@ class RpcController {
         this.dataService = ctx.dataService;
         this.logger = ctx.logger;
         this.commandExecutor = ctx.commandExecutor;
-        this.fileService = ctx.fileService;
+        this.publishController = ctx.publishController;
         this.app = express();
 
         this.enableSSL();
@@ -140,66 +140,67 @@ class RpcController {
     startListeningForRpcApiCalls() {
 
         this.app.post('/publish', async (req, res, next) => {
-            if (!req.files || !req.files.file || !req.body.assets) {
-                return next({code: 400, message: 'File, assets, and keywords are required fields.'});
-            }
-            const operationId = uuidv1();
-            try {
-                this.logger.emit({
-                    msg: 'Started measuring execution of publish command',
-                    Event_name: 'publish_start',
-                    Operation_name: 'publish',
-                    Id_operation: operationId
-                });
-
-                const inserted_object = await Models.handler_ids.create({
-                    status: 'PENDING',
-                });
-                const handlerId = inserted_object.dataValues.handler_id;
-                res.status(200).send({
-                    handler_id: handlerId,
-                });
-
-                const fileContent = req.files.file.data;
-                const fileExtension = path.extname(req.files.file.name).toLowerCase();
-                const assets = [...new Set(JSON.parse(req.body.assets.toLowerCase()))];
-                let visibility = JSON.parse(!!req.body.visibility);
-                let keywords = req.body.keywords ? JSON.parse(req.body.keywords.toLowerCase()) : [];
-
-                const assertion = await this.publishService.publish(fileContent, fileExtension, assets, keywords, visibility, handlerId);
-
-                const handlerData = {
-                    id: assertion.id,
-                    rootHash: assertion.rootHash,
-                    signature: assertion.signature,
-                    metadata: assertion.metadata,
-                };
-
-                await Models.handler_ids.update(
-                    {
-                        data: JSON.stringify(handlerData)
-                    }, {
-                        where: {
-                            handler_id: handlerId,
-                        },
-                    },
-                );
-
-            } catch (e) {
-                this.logger.error({
-                    msg: `Unexpected error at publish route: ${e.message}. ${e.stack}`,
-                    Event_name: constants.ERROR_TYPE.PUBLISH_ROUTE_ERROR,
-                    Event_value1: e.message,
-                    Id_operation: operationId
-                });
-            } finally {
-                this.logger.emit({
-                    msg: 'Finished measuring execution of publish command',
-                    Event_name: 'publish_end',
-                    Operation_name: 'publish',
-                    Id_operation: operationId
-                });
-            }
+            this.publishController.publish(req, res, next);
+            // if (!req.files || !req.files.file || !req.body.assets) {
+            //     return next({code: 400, message: 'File, assets, and keywords are required fields.'});
+            // }
+            // const operationId = uuidv1();
+            // try {
+            //     this.logger.emit({
+            //         msg: 'Started measuring execution of publish command',
+            //         Event_name: 'publish_start',
+            //         Operation_name: 'publish',
+            //         Id_operation: operationId
+            //     });
+            //
+            //     const inserted_object = await Models.handler_ids.create({
+            //         status: 'PENDING',
+            //     });
+            //     const handlerId = inserted_object.dataValues.handler_id;
+            //     res.status(200).send({
+            //         handler_id: handlerId,
+            //     });
+            //
+            //     const fileContent = req.files.file.data;
+            //     const fileExtension = path.extname(req.files.file.name).toLowerCase();
+            //     const assets = [...new Set(JSON.parse(req.body.assets.toLowerCase()))];
+            //     let visibility = JSON.parse(!!req.body.visibility);
+            //     let keywords = req.body.keywords ? JSON.parse(req.body.keywords.toLowerCase()) : [];
+            //
+            //     const assertion = await this.publishService.publish(fileContent, fileExtension, assets, keywords, visibility, handlerId);
+            //
+            //     const handlerData = {
+            //         id: assertion.id,
+            //         rootHash: assertion.rootHash,
+            //         signature: assertion.signature,
+            //         metadata: assertion.metadata,
+            //     };
+            //
+            //     await Models.handler_ids.update(
+            //         {
+            //             data: JSON.stringify(handlerData)
+            //         }, {
+            //             where: {
+            //                 handler_id: handlerId,
+            //             },
+            //         },
+            //     );
+            //
+            // } catch (e) {
+            //     this.logger.error({
+            //         msg: `Unexpected error at publish route: ${e.message}. ${e.stack}`,
+            //         Event_name: constants.ERROR_TYPE.PUBLISH_ROUTE_ERROR,
+            //         Event_value1: e.message,
+            //         Id_operation: operationId
+            //     });
+            // } finally {
+            //     this.logger.emit({
+            //         msg: 'Finished measuring execution of publish command',
+            //         Event_name: 'publish_end',
+            //         Operation_name: 'publish',
+            //         Id_operation: operationId
+            //     });
+            // }
         });
 
         this.app.get('/resolve', async (req, res, next) => {
@@ -259,14 +260,10 @@ class RpcController {
                     }
                 }
 
-                const handlerIdCachePath = this.fileService.getHandlerIdCachePath();
-
-                await this.fileService
-                    .writeContentsToFile(handlerIdCachePath, handlerId, JSON.stringify(response));
-
                 await Models.handler_ids.update(
                     {
-                        status: 'COMPLETED'
+                        status: 'COMPLETED',
+                        data: JSON.stringify(response)
                     }, {
                         where: {
                             handler_id: handlerId,
@@ -324,13 +321,11 @@ class RpcController {
                 nodes = nodes.concat(foundNodes);
 
                 nodes = [...new Set(nodes)];
-                const handlerIdCachePath = this.fileService.getHandlerIdCachePath();
 
-                await this.fileService
-                    .writeContentsToFile(handlerIdCachePath, handlerId, JSON.stringify(response));
                 await Models.handler_ids.update(
                     {
-                        status: 'PENDING'
+                        status: 'PENDING',
+                        data: JSON.stringify(response)
                     }, {
                         where: {
                             handler_id: handlerId,
@@ -438,14 +433,11 @@ class RpcController {
                     }
                     nodes = [...new Set(nodes)];
                 }
-                const handlerIdCachePath = this.fileService.getHandlerIdCachePath();
-
-                await this.fileService
-                    .writeContentsToFile(handlerIdCachePath, handlerId, JSON.stringify(response));
 
                 await Models.handler_ids.update(
                     {
-                        status: 'PENDING'
+                        status: 'PENDING',
+                        data: JSON.stringify(response)
                     }, {
                         where: {
                             handler_id: handlerId,
@@ -509,14 +501,10 @@ class RpcController {
                 try {
                     let response = await this.dataService.runQuery(req.body.query, req.query.type.toUpperCase());
 
-                    const handlerIdCachePath = this.fileService.getHandlerIdCachePath();
-
-                    await this.fileService
-                        .writeContentsToFile(handlerIdCachePath, handlerId, JSON.stringify(response));
-
                     await Models.handler_ids.update(
                         {
-                            status: 'COMPLETED'
+                            status: 'COMPLETED',
+                            data: JSON.stringify({response: response})
                         }, {
                             where: {
                                 handler_id: handlerId,
@@ -597,17 +585,13 @@ class RpcController {
                     }
                 }
 
-                const handlerIdCachePath = this.fileService.getHandlerIdCachePath();
-
-                await this.fileService
-                    .writeContentsToFile(handlerIdCachePath, handlerId, JSON.stringify(result));
-
                 await Models.handler_ids.update(
                     {
                         status: 'COMPLETED',
+                        data: JSON.stringify(result)
                     }, {
                         where: {
-                            handler_id: handlerId
+                            handler_id: handlerId,
                         },
                     },
                 );
@@ -653,11 +637,14 @@ class RpcController {
 
                 let response;
                 if (handlerData) {
-                    const documentPath = this.fileService.getHandlerIdDocumentPath(handler_id);
                     switch (req.params.operation) {
                         case 'entities:search':
-                                handlerData.data = await this.fileService.loadJsonFromFile(documentPath);
 
+                            if (handlerData.data) {
+                                handlerData.data = JSON.parse(handlerData.data)
+                            } else {
+                                handlerData.data = [];
+                            }
                             response = handlerData.data.map(async (x) => ({
                                 "@type": "EntitySearchResult",
                                 "result": {
@@ -687,7 +674,11 @@ class RpcController {
                             });
                             break;
                         case 'assertions:search':
-                                handlerData.data = await this.fileService.loadJsonFromFile(documentPath);
+                            if (handlerData.data) {
+                                handlerData.data = JSON.parse(handlerData.data)
+                            } else {
+                                handlerData.data = [];
+                            }
 
                             response = handlerData.data.map(async (x) => ({
                                 "@type": "AssertionSearchResult",
@@ -716,19 +707,12 @@ class RpcController {
                                 "itemListElement": response
                             });
                             break;
-                        case 'publish':
-                            const result = {};
-                            if (handlerData.data) {
-                                const {rdf, assertion} = await this.fileService.loadJsonFromFile(documentPath);
-                                result.data = JSON.parse(handlerData.data);
-                                result.data.rdf = rdf;
-                                result.data.assertion = assertion;
-                            }
-                            res.status(200).send({status: handlerData.status, data: result.data});
-                            break;
                         default:
-                                handlerData.data = await this.fileService.loadJsonFromFile(documentPath);
-
+                            if (handlerData.data) {
+                                handlerData.data = JSON.parse(handlerData.data)
+                            } else {
+                                handlerData.data = {};
+                            }
                             res.status(200).send({status: handlerData.status, data: handlerData.data});
                             break;
                     }

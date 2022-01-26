@@ -24,10 +24,9 @@ class DataService {
         return this.implementation.initialize(this.logger);
     }
 
-    async canonize(fileContent, fileExtension) {
+    async canonize(jsonContent, fileExtension) {
         switch (fileExtension) {
         case '.json':
-            let jsonContent = JSON.parse(fileContent);
 
             const timestamp = new Date().toISOString();
             const rdf = await this.implementation.toRDF(jsonContent);
@@ -79,8 +78,8 @@ class DataService {
     verifyAssertion(assertion, rdf) {
         return new Promise(async (resolve) => {
             try {
-                const array = rdf.join('\n').match(/<did:dkg:(.)+>/gm)
-                if (array.find(x => !x.includes(`<did:dkg:${assertion.id}>`))) {
+                const array = rdf.join('\n').match(/<did:dkg:(.)+>/gm);
+                if (array.find((x) => !x.includes(`<did:dkg:${assertion.id}>`))) {
                     this.logger.error({
                         msg: 'Invalid assertion in named graph',
                         Event_name: constants.ERROR_TYPE.VERIFY_ASSERTION_ERROR,
