@@ -165,6 +165,7 @@ class Libp2pService {
         this.node.handle(eventName, async (handlerProps) => {
             const {stream} = handlerProps;
             let timestamp = Date.now();
+            let requestBlocked = false;
             this.limiter.limit(handlerProps.connection.remotePeer.toB58String()).then(async (blocked) => {
                     if (blocked) {
                         const preparedBlockedResponse = await this.prepareForSending(constants.NETWORK_RESPONSES.BLOCKED);
@@ -172,10 +173,13 @@ class Libp2pService {
                             [preparedBlockedResponse],
                             stream
                         );
+                        requestBlocked = true;
                         return;
                     }
                 }
             );
+            if(requestBlocked) return;
+            
             let data = await pipe(
                 stream,
                 async function (source) {
