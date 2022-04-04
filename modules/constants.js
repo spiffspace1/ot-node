@@ -122,7 +122,7 @@ exports.BLOCKCHAIN_QUEUE_LIMIT = 25000;
  * @constant {number} RESOLVE_MAX_TIME_MILLIS
  * - Maximum time for resolve operation
  */
-exports.RESOLVE_MAX_TIME_MILLIS = 25 * 1000;
+exports.RESOLVE_MAX_TIME_MILLIS = 5 * 1000;
 
 /**
  * @constant {number} STORE_MAX_RETRIES
