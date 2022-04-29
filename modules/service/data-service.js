@@ -630,10 +630,10 @@ class DataService {
                                 result.url = quad._object.id;
                                 break;
                             case 'http://schema.org/description':
-                                result.description = quad._object.id;
+                                result.description = JSON.parse(quad._object.id);
                                 break;
                             case 'http://schema.org/name':
-                                result.name = quad._object.id;
+                                result.name = JSON.parse(quad._object.id);
                                 break;
                             default:
                                 break;
