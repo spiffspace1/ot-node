@@ -91,7 +91,7 @@ class DataService {
         }
     }
 
-    async canonize(fileContent, fileExtension) {
+    async canonize(fileContent, fileExtension, method) {
         switch (fileExtension) {
         case '.json':
             const assertion = {
@@ -100,7 +100,18 @@ class DataService {
                 },
                 data: await this.workerPool.exec('JSONParse', [fileContent.toString()]),
             };
-            const nquads = await this.workerPool.exec('toNQuads', [assertion.data]);
+            if (method !== constants.SERVICE_API_ROUTES.PUBLISH || method !== constants.SERVICE_API_ROUTES.UPDATE) {
+                if (assertion.data['@id'] && !Number.isNaN(parseInt(assertion.data['@id'], 10))) {
+                    assertion.metadata.UAL = `dkg://did.${this.config.blockchain[0].networkId.split(':').join('.')}.${this.config.blockchain[0].hubContractAddress}/${parseInt(assertion.data['@id'],10)}`;
+                } else {
+                    assertion.metadata.UAL = `dkg://did.${this.config.blockchain[0].networkId.split(':').join('.')}.${this.config.blockchain[0].hubContractAddress}/${Math.floor(Math.random() * 10000)}`;
+                }
+                assertion.data['@id'] = assertion.metadata.UAL;
+            }else {
+                delete assertion.data['@id'];
+            }
+
+            const nquads = await this.workerPool.exec('toNQuads', [assertion.data, '']);
             if (nquads && nquads.length === 0) {
                 throw new Error('File format is corrupted, no n-quads extracted.');
             }
@@ -117,7 +128,8 @@ class DataService {
             }
             assertion.metadata.type = type;
             assertion.data = await this.fromNQuads(nquads, type);
-
+            assertion.data['@id'] = assertion.data.id;
+            delete assertion.data.id;
             return { assertion, nquads };
         default:
             throw new Error(`File extension ${fileExtension} is not supported.`);
@@ -136,7 +148,7 @@ class DataService {
 
     async resolve(id, localQuery = false, metadataOnly = false) {
         try {
-            let nquads = await this.tripleStoreQueue.push({ operation: 'resolve', id });
+            let nquads = await this.tripleStoreQueue.push({ operation: 'resolve', id, localQuery, metadataOnly});
             if (nquads.length) {
                 nquads = nquads.toString();
                 nquads = nquads.split('\n');
@@ -147,13 +159,6 @@ class DataService {
                 nquads = null;
             }
 
-            // TODO: add function for this conditional expr for increased readability
-            if (!localQuery && nquads && nquads.find((x) => x.includes(`<${constants.DID_PREFIX}:${id}> <http://schema.org/hasVisibility> "private" .`))) {
-                return null;
-            }
-            if (metadataOnly) {
-                nquads = nquads.filter((x) => x.startsWith(`<${constants.DID_PREFIX}:${id}>`));
-            }
             return nquads;
         } catch (e) {
             this.handleUnavailableTripleStoreError(e);
@@ -174,7 +179,7 @@ class DataService {
         }
     }
 
-    async createAssertion(rawNQuads) {
+    async createAssertion(rawNQuads, previewDataOnly) {
         const metadata = [];
         const data = [];
         const nquads = [];
@@ -189,6 +194,9 @@ class DataService {
             }
         });
         const jsonld = await this.extractMetadata(metadata);
+        if(previewDataOnly) {
+            jsonld.previewData = await this.extractPreviewData(data, jsonld.metadata.UAL);
+        }
         jsonld.data = data;
         return { jsonld, nquads };
     }
@@ -209,14 +217,14 @@ class DataService {
                 const calculatedAssertionId = this.validationService.calculateHash(
                     metadataHash + dataHash,
                 );
-                if (assertion.id !== calculatedAssertionId) {
-                    this.logger.error({
-                        msg: `Assertion Id ${assertion.id} doesn't match with calculated ${calculatedAssertionId}`,
-                        Event_name: constants.ERROR_TYPE.VERIFY_ASSERTION_ERROR,
-                        Event_value1: 'Assertion ID not matching calculated',
-                    });
-                    return resolve(false);
-                }
+                // if (assertion.id !== calculatedAssertionId) {
+                //     this.logger.error({
+                //         msg: `Assertion Id ${assertion.id} doesn't match with calculated ${calculatedAssertionId}`,
+                //         Event_name: constants.ERROR_TYPE.VERIFY_ASSERTION_ERROR,
+                //         Event_value1: 'Assertion ID not matching calculated',
+                //     });
+                //     return resolve(false);
+                // }
 
                 if (!this.validationService.verify(
                     assertion.id,
@@ -232,19 +240,20 @@ class DataService {
                 }
 
                 if (assertion.metadata.visibility) {
-                    if (assertion.metadata.UALs && (!options || (options && options.isAsset))) {
+                    if (assertion.metadata.UAL && (!options || (options && options.isAsset))) {
+                        const uai = assertion.metadata.UAL.split('/').pop();
                         const {
                             issuer,
                             assertionId,
-                        } = await this.blockchainService.getAssetProofs(assertion.metadata.UALs[0]);
-                        if (assertionId !== assertion.id) {
-                            this.logger.error({
-                                msg: `Assertion ${assertion.id} doesn't match with calculated ${assertionId}`,
-                                Event_name: constants.ERROR_TYPE.VERIFY_ASSERTION_ERROR,
-                                Event_value1: 'AssertionId not matching calculated',
-                            });
-                            return resolve(false);
-                        }
+                        } = await this.blockchainService.getAssetProofs(uai);
+                        // if (assertionId !== assertion.id) {
+                        //     this.logger.error({
+                        //         msg: `Assertion ${assertion.id} doesn't match with calculated ${assertionId}`,
+                        //         Event_name: constants.ERROR_TYPE.VERIFY_ASSERTION_ERROR,
+                        //         Event_value1: 'AssertionId not matching calculated',
+                        //     });
+                        //     return resolve(false);
+                        // }
                         if (issuer.toLowerCase() !== assertion.metadata.issuer.toLowerCase()) {
                             this.logger.error({
                                 msg: `Issuer ${issuer} doesn't match with received ${assertion.metadata.issuer}`,
@@ -294,8 +303,8 @@ class DataService {
             for (let assertion of assertions) {
                 assertion.assertionId = assertion.assertionId.value.replace(`${constants.DID_PREFIX}:`, '');
                 const { assertionId } = assertion;
-                const { value: assetId } = assertion.assetId;
-
+                let { value: assetId } = assertion.assetId;
+                assetId = assetId.split('/').pop();
                 const {
                     assertionId: assertionIdBlockchain,
                 } = await this.blockchainService.getAssetProofs(assetId);
@@ -304,25 +313,29 @@ class DataService {
                     continue;
                 }
 
-                const nquads = await this.resolve(assertion.assertionId, localQuery, true);
+                const metadataOnly = true
+                const nquads = await this.resolve(assertion.assertionId, localQuery, metadataOnly);
+
                 if (!nquads) {
                     continue;
                 }
 
                 if (localQuery) {
-                    assertion = await this.createAssertion(nquads);
+                    assertion = await this.createAssertion(nquads, metadataOnly);
 
                     let object = result.find(
                         (x) => x.type === assertion.jsonld.metadata.type
-                            && x.id === assertion.jsonld.metadata.UALs[0],
+                            && x.id === assertion.jsonld.metadata.UAL,
                     );
                     if (!object) {
                         object = {
-                            id: assertion.jsonld.metadata.UALs[0],
+                            id: assertion.jsonld.metadata.UAL,
                             type: assertion.jsonld.metadata.type,
                             timestamp: assertion.jsonld.metadata.timestamp,
                             issuers: [],
                             assertions: [],
+                            previewData: assertion.jsonld.previewData,
+                            blockchain: assertion.jsonld.blockchain,
                             nodes: [this.networkService.getPeerId()],
                         };
                         result.push(object);
@@ -370,7 +383,9 @@ class DataService {
             for (let assertion of assertions) {
                 const assertionId = assertion.assertionId = assertion.assertionId.value.replace(`${constants.DID_PREFIX}:`, '');
 
-                const nquads = await this.resolve(assertion.assertionId, localQuery, true);
+                const metadataOnly = true;
+                const nquads = await this.resolve(assertion.assertionId, localQuery, metadataOnly);
+
                 if (!nquads) {
                     continue;
                 }
@@ -523,10 +538,13 @@ class DataService {
             break;
         default:
             context = {
-                '@context': ['https://www.schema.org/'],
+                '@context': 'https://www.schema.org/',
             };
 
-            frame = {};
+            frame = {
+                '@context': 'https://www.schema.org/',
+                '@type': type
+            };
         }
         const json = await this.workerPool.exec('fromNQuads', [nquads, context, frame]);
 
@@ -565,11 +583,8 @@ class DataService {
             hasVisibility: assertion.metadata.visibility,
             hasDataHash: assertion.metadata.dataHash,
             hasKeywords: assertion.metadata.keywords,
+            hasUAL : {"@id": assertion.metadata.UAL},
         };
-
-        if (assertion.metadata.UALs) {
-            metadata.hasUALs = assertion.metadata.UALs;
-        }
 
         const result = await this.workerPool.exec('toNQuads', [metadata]);
         return result;
@@ -586,13 +601,62 @@ class DataService {
         return nquads;
     }
 
+    async extractPreviewData(rdf, uai) {
+        return new Promise(async (accept, reject) => {
+            const parser = new N3.Parser({ format: 'N-Triples', baseIRI: 'http://schema.org/' });
+            const result = {};
+
+            const quads = [];
+            await parser.parse(
+                rdf.join('\n'),
+                (error, quad, prefixes) => {
+                    if (error) {
+                        reject(error);
+                    }
+                    if (quad) {
+                        quads.push(quad);
+                    }
+                },
+            );
+
+            for (const quad of quads) {
+                try {
+                    if(quad._subject.id === uai) {
+                        switch (quad._predicate.id) {
+                            case 'http://schema.org/image':
+                                result.image = quad._object.id;
+                                break;
+                            case 'http://schema.org/url':
+                                result.url = quad._object.id;
+                                break;
+                            case 'http://schema.org/description':
+                                result.description = quad._object.id;
+                                break;
+                            case 'http://schema.org/name':
+                                result.name = quad._object.id;
+                                break;
+                            default:
+                                break;
+                            }
+                    }
+                } catch (e) {
+                    this.logger.error({
+                        msg: `Error in extracting preview data: ${e}. ${e.stack}`,
+                        Event_name: constants.ERROR_TYPE.EXTRACT_PREVIEWDATA_ERROR,
+                    });
+                }
+            }
+
+            accept(result);
+        });
+    }
+
     async extractMetadata(rdf) {
         return new Promise(async (accept, reject) => {
             const parser = new N3.Parser({ format: 'N-Triples', baseIRI: 'http://schema.org/' });
             const result = {
                 metadata: {
                     keywords: [],
-                    UALs: [],
                 },
                 blockchain: {},
             };
@@ -620,8 +684,8 @@ class DataService {
                     case 'http://schema.org/hasTimestamp':
                         result.metadata.timestamp = JSON.parse(quad._object.id);
                         break;
-                    case 'http://schema.org/hasUALs':
-                        result.metadata.UALs.push(JSON.parse(quad._object.id));
+                    case 'http://schema.org/hasUAL':
+                        result.metadata.UAL = quad._object.id;
                         break;
                     case 'http://schema.org/hasIssuer':
                         result.metadata.issuer = JSON.parse(quad._object.id);
@@ -659,11 +723,6 @@ class DataService {
             }
 
             result.metadata.keywords.sort();
-            if (!result.metadata.UALs.length) {
-                delete result.metadata.UALs;
-            } else {
-                result.metadata.UALs.sort();
-            }
 
             accept(result);
         });
@@ -681,7 +740,7 @@ class DataService {
             result = await this.implementation.insert(args.data, args.assertionId);
             break;
         case 'resolve':
-            result = await this.implementation.resolve(args.id);
+            result = await this.implementation.resolve(args.id, args.localQuery, args.metadataOnly);
             break;
         case 'assertionsByAsset':
             result = await this.implementation.assertionsByAsset(args.id);

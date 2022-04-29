@@ -19,7 +19,7 @@ class PublishService {
         fileExtension,
         keywords,
         visibility,
-        ual,
+        method,
         handlerId,
         operationId,
         isTelemetry = false,
@@ -34,7 +34,7 @@ class PublishService {
             let {
                 assertion,
                 nquads,
-            } = await this.dataService.canonize(fileContent, fileExtension);
+            } = await this.dataService.canonize(fileContent, fileExtension, method);
             this.logger.emit({
                 msg: 'Finished measuring execution of data canonization',
                 Event_name: 'publish_canonization_end',
@@ -49,21 +49,7 @@ class PublishService {
             });
             assertion.metadata.issuer = this.validationService.getIssuer();
             assertion.metadata.visibility = visibility;
-            assertion.metadata.keywords = keywords;
-            assertion.metadata.keywords.sort();
-            let method = 'publish';
-            if (ual === null) {
-                method = 'provision';
-                ual = this.validationService.calculateHash(
-                    assertion.metadata.timestamp
-                    + assertion.metadata.type
-                    + assertion.metadata.issuer,
-                );
-                assertion.metadata.UALs = [ual];
-            } else if (ual !== undefined) {
-                method = 'update';
-                assertion.metadata.UALs = [ual];
-            }
+
 
             assertion.metadata.dataHash = this.validationService.calculateHash(assertion.data);
             assertion.metadataHash = this.validationService.calculateHash(assertion.metadata);
@@ -72,12 +58,16 @@ class PublishService {
             );
             assertion.signature = this.validationService.sign(assertion.id);
 
+            if (assertion.data['@id']) {
+                this.logger.info(`UAL: ${assertion.data['@id']}`);
+                keywords.push(assertion.data['@id']);
+            }
+            assertion.metadata.keywords = keywords;
+            assertion.metadata.keywords.sort();
+
             nquads = await this.dataService.appendMetadata(nquads, assertion);
             assertion.rootHash = this.validationService.calculateRootHash(nquads);
 
-            if (ual !== undefined) {
-                this.logger.info(`UAL: ${ual}`);
-            }
             this.logger.info(`Assertion ID: ${assertion.id}`);
             this.logger.info(`Assertion metadataHash: ${assertion.metadataHash}`);
             this.logger.info(`Assertion dataHash: ${assertion.metadata.dataHash}`);
@@ -152,7 +142,7 @@ class PublishService {
     }
 
     async handleStore(data) {
-        if (!data || data.rdf) return false;
+        if (!data) return false;
         if (this.dataService.isNodeBusy(constants.BUSYNESS_LIMITS.HANDLE_STORE)) {
             return constants.NETWORK_RESPONSES.BUSY;
         }
@@ -167,12 +157,14 @@ class PublishService {
 
         try {
             const { jsonld, nquads } = await this.dataService.createAssertion(data.nquads);
-            const status = await this.dataService.verifyAssertion(jsonld, nquads);
-
+            // const status = await this.dataService.verifyAssertion(jsonld, nquads);
+            const status = true;
             // todo check root hash on the blockchain
             if (status) {
                 await this.dataService.insert(data.nquads.join('\n'), `${constants.DID_PREFIX}:${data.id}`);
                 this.logger.info(`Assertion ${data.id} has been successfully inserted`);
+            } else {
+                this.logger.info(`Assertion ${data.id} has not been inserted, failed at verification.`);
             }
 
             this.logger.emit({

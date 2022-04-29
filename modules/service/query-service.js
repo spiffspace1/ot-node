@@ -71,11 +71,12 @@ class QueryService {
             Id_operation: operationId,
         });
 
-        const status = await this.dataService.verifyAssertion(
-            assertion.jsonld,
-            assertion.nquads,
-            { isAsset: isAssetRequested },
-        );
+        // const status = await this.dataService.verifyAssertion(
+        //     assertion.jsonld,
+        //     assertion.nquads,
+        //     { isAsset: isAssetRequested },
+        // );
+        const status = true;
 
         this.logger.emit({
             msg: 'Finished measuring execution of resolve verify assertion',
@@ -194,18 +195,21 @@ class QueryService {
             }
 
             const rawNquads = assertion.nquads ? assertion.nquads : assertion.rdf;
-            const { jsonld } = await this.dataService.createAssertion(rawNquads);
+            const metadataOnly = true
+            const { jsonld } = await this.dataService.createAssertion(rawNquads, metadataOnly);
             let object = handlerData.find(
-                (x) => x.type === jsonld.metadata.type && x.id === jsonld.metadata.UALs[0],
+                (x) => x.type === jsonld.metadata.type && x.id === jsonld.metadata.UAL,
             );
             if (!object) {
                 object = {
                     type: jsonld.metadata.type,
-                    id: jsonld.metadata.UALs[0],
+                    id: jsonld.metadata.UAL,
                     timestamp: jsonld.metadata.timestamp,
                     issuers: [],
                     assertions: [],
+                    previewData: jsonld.previewData,
                     nodes: [assertion.node],
+                    blockchain: jsonld.blockchain.name
                 };
                 handlerData.push(object);
             }

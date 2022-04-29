@@ -119,14 +119,35 @@ class GraphdbService {
         });
     }
 
-    async resolve(uri) {
+
+
+    async resolve(uri, localQuery, metadataOnly) {
+        const graphName = `<${constants.DID_PREFIX}:${uri}>`
+        const publicVisibility = localQuery ? '' : `${graphName} schema:hasVisibility "public" .`
+        const matchMetadata = metadataOnly ? `${graphName} ?p ?o` : '';
+        const previewData = metadataOnly ? `UNION 
+        {
+            GRAPH ${graphName}
+            {
+                ?s ?p ?o .
+                ${graphName} schema:hasUAL ?s .
+                ?s schema:image | schema:url | schema:description | schema:name ?o .
+            }
+        }` : ''
+
         const query = `PREFIX schema: <http://schema.org/>
-                        CONSTRUCT { ?s ?p ?o }
-                        WHERE {
-                          GRAPH <${constants.DID_PREFIX}:${uri}> {
-                            ?s ?p ?o
-                          }
-                        }`;
+                    CONSTRUCT { ?s ?p ?o }
+                    WHERE {
+                        {
+                            GRAPH ${graphName} 
+                            {
+                                ?s ?p ?o .
+                                ${publicVisibility}
+                                ${matchMetadata}
+                            }
+                        }
+                        ${previewData}
+                    }`;
         const nquads = await this.construct(query);
         return nquads;
     }
@@ -135,7 +156,7 @@ class GraphdbService {
         const query = `PREFIX schema: <http://schema.org/>
             SELECT ?assertionId ?issuer ?timestamp
             WHERE {
-                 ?assertionId schema:hasUALs "${uri}" ;
+                 ?assertionId schema:hasUAL <${uri}>  ;
                      schema:hasTimestamp ?timestamp ;
                      schema:hasIssuer ?issuer .
             }
@@ -176,7 +197,7 @@ class GraphdbService {
                             WHERE {
                                 ?assertionId schema:hasTimestamp ?latestTimestamp ;
                             ${!localQuery ? 'schema:hasVisibility "public" ;' : ''}
-                                                     schema:hasUALs ?assetId .
+                                                     schema:hasUAL ?assetId .
                                     {
                                         SELECT ?assetId (MAX(?timestamp) AS ?latestTimestamp)
                                         WHERE {
@@ -184,7 +205,7 @@ class GraphdbService {
                                                          schema:hasIssuer ?issuer ;
                                                          schema:hasType ?type ;
                                                          schema:hasTimestamp ?timestamp ;
-                                                         schema:hasUALs ?assetId .
+                                                         schema:hasUAL ?assetId .
                                 ${options.prefix ? `FILTER contains(lcase(?keyword),'${query}')` : `FILTER (lcase(?keyword) = '${query}')`}
                                 ${options.issuers ? `FILTER (?issuer IN (${JSON.stringify(options.issuers).slice(1, -1)}))` : ''}
                                 ${options.types ? `FILTER (?type IN (${JSON.stringify(options.types).slice(1, -1)}))` : ''}
