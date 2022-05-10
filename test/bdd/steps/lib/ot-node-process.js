@@ -14,8 +14,10 @@ process.on('message', async (data) => {
             while (!started) {
                 try {
                     const nodeHostname = `http://localhost:${config.rpcPort}`;
+                    console.log(`Sending info request: ${nodeHostname}`)
                     // eslint-disable-next-line no-await-in-loop
                     await httpApiHelper.info(nodeHostname);
+                    console.log('Info called successfully');
                     started = true;
                 } catch (error) {
                     // eslint-disable-next-line no-await-in-loop
