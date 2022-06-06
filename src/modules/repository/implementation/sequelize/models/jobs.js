@@ -1,30 +1,33 @@
-const { Model } = require('sequelize');
-const uuid = require('uuid');
+import { Model } from 'sequelize';
+import { v4 as uuidv4 } from 'uuid';
 
-module.exports = (sequelize, DataTypes) => {
+export default (sequelize, DataTypes) => {
     class jobs extends Model {
         static associate(models) {
             jobs._models = models;
             // define association here
         }
     }
-    jobs.init({
-        id: {
-            type: DataTypes.UUID,
-            primaryKey: true,
-            defaultValue: () => uuid.v4(),
+    jobs.init(
+        {
+            id: {
+                type: DataTypes.UUID,
+                primaryKey: true,
+                defaultValue: () => uuidv4(),
+            },
+            publisher: DataTypes.STRING,
+            assertion_hash: DataTypes.STRING,
+            tx_hash: DataTypes.STRING,
+            signature: DataTypes.TEXT,
+            blockchain_id: DataTypes.STRING,
+            published_to: DataTypes.TEXT,
+            created_at: DataTypes.DATE,
+            updated_at: DataTypes.DATE,
         },
-        publisher: DataTypes.STRING,
-        assertion_hash: DataTypes.STRING,
-        tx_hash: DataTypes.STRING,
-        signature: DataTypes.TEXT,
-        blockchain_id: DataTypes.STRING,
-        published_to: DataTypes.TEXT,
-        created_at: DataTypes.DATE,
-        updated_at: DataTypes.DATE,
-    }, {
-        sequelize,
-        modelName: 'jobs',
-    });
+        {
+            sequelize,
+            modelName: 'jobs',
+        },
+    );
     return jobs;
 };

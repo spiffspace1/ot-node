@@ -1,5 +1,8 @@
-const pino = require('pino');
-const path = require('path');
+import pino from 'pino';
+import { fileURLToPath } from 'url'
+import { dirname , join, resolve } from 'path'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 class Logger {
     constructor(logLevel = 'trace', telemetryHubEnabled) {
@@ -9,16 +12,24 @@ class Logger {
 
     initialize(logLevel, telemetryHubEnabled) {
         try {
-            const logFilename = path.join(path.resolve(__dirname, '../../'), 'logs/active.log');
+            const logFilename = join(resolve(__dirname, '../../'), 'logs/active.log');
             let chosenTargets = [];
             if (telemetryHubEnabled) {
                 chosenTargets = [
-                    { target: './pino-pretty-transport', options: { colorize: true }, level: 'trace' },
+                    {
+                        target: './pino-pretty-transport',
+                        options: { colorize: true },
+                        level: 'trace',
+                    },
                     { target: 'pino/file', level: 'trace', options: { destination: logFilename } },
                 ];
             } else {
                 chosenTargets = [
-                    { target: './pino-pretty-transport', options: { colorize: true }, level: 'trace' },
+                    {
+                        target: './pino-pretty-transport',
+                        options: { colorize: true },
+                        level: 'trace',
+                    },
                 ];
             }
 
@@ -81,4 +92,4 @@ class Logger {
     }
 }
 
-module.exports = Logger;
+export default Logger;

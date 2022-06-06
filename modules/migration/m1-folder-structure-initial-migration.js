@@ -1,10 +1,10 @@
-const fs = require('fs-extra');
-const appRootPath = require('app-root-path');
-const path = require('path');
-const { exec } = require('child_process');
-const pjson = require('../../package.json');
-const BaseMigration = require('./base-migration');
+import fs from 'fs-extra';
+import appRootPath from "app-root-path";
+import {join} from 'path';
+import { exec } from 'child_process';
+import BaseMigration from './base-migration.js';
 
+const pjson = JSON.parse(fs.readFileSync(join(appRootPath.path, 'package.json')));
 const CONFIGURATION_NAME = '.origintrail_noderc';
 
 class M1FolderStructureInitialMigration extends BaseMigration {
@@ -20,15 +20,15 @@ class M1FolderStructureInitialMigration extends BaseMigration {
                 return;
             }
 
-            const currentSymlink = path.join(appRootPath.path, '..', 'current');
+            const currentSymlink = join(appRootPath.path, '..', 'current');
             if (await fs.pathExists(currentSymlink)) {
                 await this.finalizeMigration();
                 return;
             }
 
             const currentVersion = pjson.version;
-            const temporaryAppRootPath = path.join(appRootPath.path, '..', 'ot-node-tmp');
-            const newTemporaryAppDirectoryPath = path.join(temporaryAppRootPath, currentVersion);
+            const temporaryAppRootPath = join(appRootPath.path, '..', 'ot-node-tmp');
+            const newTemporaryAppDirectoryPath = join(temporaryAppRootPath, currentVersion);
             await fs.ensureDir(newTemporaryAppDirectoryPath);
 
             const currentAppRootPath = appRootPath.path;
@@ -39,20 +39,20 @@ class M1FolderStructureInitialMigration extends BaseMigration {
 
             await fs.rename(temporaryAppRootPath, currentAppRootPath);
 
-            const newAppDirectoryPath = path.join(currentAppRootPath, currentVersion);
+            const newAppDirectoryPath = join(currentAppRootPath, currentVersion);
 
-            const currentSymlinkFolder = path.join(currentAppRootPath, 'current');
+            const currentSymlinkFolder = join(currentAppRootPath, 'current');
             if (await fs.pathExists(currentSymlinkFolder)) {
                 await fs.remove(currentSymlinkFolder);
             }
             await fs.ensureSymlink(newAppDirectoryPath, currentSymlinkFolder);
 
-            const oldConfigurationPath = path.join(newAppDirectoryPath, CONFIGURATION_NAME);
-            const newConfigurationPath = path.join(currentAppRootPath, CONFIGURATION_NAME);
+            const oldConfigurationPath = join(newAppDirectoryPath, CONFIGURATION_NAME);
+            const newConfigurationPath = join(currentAppRootPath, CONFIGURATION_NAME);
             await fs.move(oldConfigurationPath, newConfigurationPath);
 
-            await this.finalizeMigration(path.join(currentAppRootPath, 'data', 'migrations'));
-            const otnodeServicePath = path.join(
+            await this.finalizeMigration(join(currentAppRootPath, 'data', 'migrations'));
+            const otnodeServicePath = join(
                 newAppDirectoryPath,
                 'installer',
                 'data',
@@ -90,4 +90,4 @@ class M1FolderStructureInitialMigration extends BaseMigration {
     }
 }
 
-module.exports = M1FolderStructureInitialMigration;
+export default M1FolderStructureInitialMigration;

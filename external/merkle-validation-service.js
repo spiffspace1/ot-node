@@ -1,12 +1,10 @@
-const MerkleTools = require('merkle-tools');
-const SHA256 = require('crypto-js/sha256');
+import MerkleTools from 'merkle-tools';
+import { SHA256 } from 'crypto-js';
+import { ec } from 'elliptic';
+import sha3 from 'js-sha3';
+import BytesUtilities from './BytesUtilities.js';
 
-const elliptic = require('elliptic');
-
-const secp256k1 = new elliptic.ec('secp256k1');
-const sha3 = require('js-sha3');
-
-const BytesUtilities = require('./BytesUtilities');
+const secp256k1 = new ec('secp256k1');
 
 const _slicedToArray = (function () {
     function sliceIterator(arr, i) {
@@ -227,4 +225,4 @@ class MerkleValidationService {
     }
 }
 
-module.exports = MerkleValidationService;
+export default MerkleValidationService;

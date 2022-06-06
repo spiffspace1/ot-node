@@ -1,5 +1,5 @@
-const Command = require('../../command');
-const constants = require('../../../constants');
+import Command from '../../command.js';
+import { ERROR_TYPE, DID_PREFIX } from '../../../constants.js';
 
 class InsertAssertionCommand extends Command {
     constructor(ctx) {
@@ -25,7 +25,7 @@ class InsertAssertionCommand extends Command {
         const { nquads, assertion } = await this.fileService.loadJsonFromFile(documentPath);
 
         try {
-            await this.dataService.insert(nquads.join('\n'), `${constants.DID_PREFIX}:${assertion.id}`);
+            await this.dataService.insert(nquads.join('\n'), `${DID_PREFIX}:${assertion.id}`);
             this.logger.info(`Assertion ${assertion.id} has been successfully inserted`);
             this.logger.emit({
                 msg: 'Finished measuring execution of storing publishing data into local triple store',
@@ -34,7 +34,7 @@ class InsertAssertionCommand extends Command {
                 Id_operation: operationId,
             });
         } catch (e) {
-            await this.handleError(handlerId, e, constants.ERROR_TYPE.INSERT_ASSERTION_ERROR, true);
+            await this.handleError(handlerId, e, ERROR_TYPE.INSERT_ASSERTION_ERROR, true);
             return Command.empty();
         }
 
@@ -47,10 +47,8 @@ class InsertAssertionCommand extends Command {
      * @param err
      */
     async recover(command, err) {
-        const {
-            handlerId,
-        } = command.data;
-        await this.handleError(handlerId, err, constants.ERROR_TYPE.INSERT_ASSERTION_ERROR, true);
+        const { handlerId } = command.data;
+        await this.handleError(handlerId, err, ERROR_TYPE.INSERT_ASSERTION_ERROR, true);
 
         return Command.empty();
     }
@@ -71,4 +69,4 @@ class InsertAssertionCommand extends Command {
     }
 }
 
-module.exports = InsertAssertionCommand;
+export default InsertAssertionCommand;

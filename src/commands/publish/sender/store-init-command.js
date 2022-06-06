@@ -1,8 +1,16 @@
-const { v4: uuidv4 } = require('uuid');
-const sleep = require('sleep-async')().Promise;
-const Command = require('../../command');
-const Models = require('../../../../models/index');
-const constants = require('../../../constants/constants');
+import { v4 as uuidv4 } from 'uuid';
+import { setTimeout } from 'timers/promises';
+import Command from '../../command.js';
+import {
+    ERROR_TYPE,
+    NETWORK_MESSAGE_TYPES,
+    REMOVE_SESSION_COMMAND_DELAY,
+    NETWORK_PROTOCOLS,
+    STORE_BUSY_REPEAT_INTERVAL_IN_MILLS,
+    STORE_MIN_SUCCESS_RATE,
+    STORE_MAX_TRIES,
+} from '../../../constants/constants.js';
+import Models from '../../../../models/index.js';
 
 class StoreInitCommand extends Command {
     constructor(ctx) {
@@ -26,7 +34,7 @@ class StoreInitCommand extends Command {
         const messages = nodes.map(() => ({
             header: {
                 sessionId: uuidv4(),
-                messageType: constants.NETWORK_MESSAGE_TYPES.REQUESTS.PROTOCOL_INIT,
+                messageType: NETWORK_MESSAGE_TYPES.REQUESTS.PROTOCOL_INIT,
             },
             data: {
                 assertionId: assertion.id,
@@ -41,7 +49,7 @@ class StoreInitCommand extends Command {
                     data: { sessionId: message.header.sessionId },
                     transactional: false,
                 },
-                constants.REMOVE_SESSION_COMMAND_DELAY,
+                REMOVE_SESSION_COMMAND_DELAY,
             ),
         );
 
@@ -56,29 +64,25 @@ class StoreInitCommand extends Command {
                 let tries = 0;
                 let response;
                 do {
-                    if (tries !== 0)
-                        await sleep.sleep(constants.STORE_BUSY_REPEAT_INTERVAL_IN_MILLS);
+                    if (tries !== 0) await setTimeout(STORE_BUSY_REPEAT_INTERVAL_IN_MILLS);
 
                     response = await this.networkModuleManager.sendMessage(
-                        constants.NETWORK_PROTOCOLS.STORE,
+                        NETWORK_PROTOCOLS.STORE,
                         node,
                         messages[index],
                     );
                     tries += 1;
                 } while (
                     response &&
-                    response.header.messageType ===
-                        constants.NETWORK_MESSAGE_TYPES.RESPONSES.BUSY &&
-                    tries < constants.STORE_MAX_TRIES
+                    response.header.messageType === NETWORK_MESSAGE_TYPES.RESPONSES.BUSY &&
+                    tries < STORE_MAX_TRIES
                 );
                 if (
                     !response ||
-                    response.header.messageType === constants.NETWORK_MESSAGE_TYPES.RESPONSES.NACK
+                    response.header.messageType === NETWORK_MESSAGE_TYPES.RESPONSES.NACK
                 )
                     failedResponses += 1;
-                else if (
-                    response.header.messageType === constants.NETWORK_MESSAGE_TYPES.RESPONSES.BUSY
-                )
+                else if (response.header.messageType === NETWORK_MESSAGE_TYPES.RESPONSES.BUSY)
                     busyResponses += 1;
                 else {
                     availableNodes.push(node);
@@ -96,9 +100,7 @@ class StoreInitCommand extends Command {
 
         await Promise.allSettled(sendMessagePromises);
 
-        const maxFailedResponses = Math.round(
-            (1 - constants.STORE_MIN_SUCCESS_RATE) * nodes.length,
-        );
+        const maxFailedResponses = Math.round((1 - STORE_MIN_SUCCESS_RATE) * nodes.length);
         const status =
             failedResponses + busyResponses <= maxFailedResponses ? 'COMPLETED' : 'FAILED';
 
@@ -147,7 +149,7 @@ class StoreInitCommand extends Command {
         this.logger.error({
             msg,
             Operation_name: 'Error',
-            Event_name: constants.ERROR_TYPE.STORE_INIT_ERROR,
+            Event_name: ERROR_TYPE.STORE_INIT_ERROR,
             Event_value1: error.message,
             Id_operation: handlerId,
         });
@@ -169,4 +171,4 @@ class StoreInitCommand extends Command {
     }
 }
 
-module.exports = StoreInitCommand;
+export default StoreInitCommand;

@@ -1,11 +1,11 @@
-const path = require('path');
-const fs = require('fs-extra');
-const { exec } = require('child_process');
-const https = require('https');
-const appRootPath = require('app-root-path');
-const semver = require('semver');
-const axios = require('axios');
-const unzipper = require('unzipper');
+import path from 'path';
+import fs from 'fs-extra';
+import appRootPath from 'app-root-path';
+import axios from 'axios';
+import semver from 'semver';
+import { Extract } from 'unzipper';
+import { exec } from 'child_process';
+import https from 'https'
 
 const REPOSITORY_URL = 'https://github.com/OriginTrail/ot-node';
 const ARCHIVE_REPOSITORY_URL = 'github.com/OriginTrail/ot-node/archive/';
@@ -201,9 +201,9 @@ class OTAutoUpdater {
     unzipFile(destination, source) {
         this.logger.debug(`AutoUpdater - Unzipping ot-node new version archive`);
         return new Promise((resolve, reject) => {
-            const fileReadStream = fs
-                .createReadStream(source)
-                .pipe(unzipper.Extract({ path: destination }));
+            const fileReadStream = fs.createReadStream(source).pipe(
+                Extract({ path: destination }),
+            );
             fileReadStream.on('close', () => {
                 this.logger.debug(`AutoUpdater - Unzip completed`);
                 fs.removeSync(source);
@@ -263,4 +263,4 @@ class OTAutoUpdater {
     }
 }
 
-module.exports = OTAutoUpdater;
+export default OTAutoUpdater;

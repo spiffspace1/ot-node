@@ -1,5 +1,8 @@
-const Command = require('../../command');
-const constants = require('../../../constants/constants');
+import Command from '../../command.js'
+import {
+    ERROR_TYPE,
+    NETWORK_PROTOCOLS,
+} from '../../../constants/constants.js'
 
 class FindNodesCommand extends Command {
     constructor(ctx) {
@@ -27,7 +30,7 @@ class FindNodesCommand extends Command {
             );
             const foundNodes = await this.networkModuleManager.findNodes(
                 keyword,
-                constants.NETWORK_PROTOCOLS.STORE,
+                NETWORK_PROTOCOLS.STORE,
                 this.config.replicationFactor,
             );
             if (foundNodes.length < this.config.replicationFactor) {
@@ -64,7 +67,7 @@ class FindNodesCommand extends Command {
         this.logger.error({
             msg,
             Operation_name: 'Error',
-            Event_name: constants.ERROR_TYPE.FIND_NODES_ERROR,
+            Event_name: ERROR_TYPE.FIND_NODES_ERROR,
             Event_value1: error.message,
             Id_operation: handlerId,
         });
@@ -86,4 +89,4 @@ class FindNodesCommand extends Command {
     }
 }
 
-module.exports = FindNodesCommand;
+export default FindNodesCommand;

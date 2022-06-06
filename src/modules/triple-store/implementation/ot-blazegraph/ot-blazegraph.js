@@ -1,5 +1,5 @@
-const axios = require('axios');
-const OtTripleStore = require('../ot-triple-store');
+import axios from 'axios';
+import OtTripleStore from '../ot-triple-store.js';
 
 class OtBlazegraph extends OtTripleStore {
     async healthCheck() {
@@ -19,4 +19,4 @@ class OtBlazegraph extends OtTripleStore {
     }
 }
 
-module.exports = OtBlazegraph;
+export default OtBlazegraph;

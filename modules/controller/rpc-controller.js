@@ -1,17 +1,23 @@
-const express = require('express');
-const fileUpload = require('express-fileupload');
-const ipfilter = require('express-ipfilter').IpFilter;
-const fs = require('fs');
-const https = require('https');
-const { IpDeniedError } = require('express-ipfilter');
-const { v1: uuidv1 } = require('uuid');
-const sortedStringify = require('json-stable-stringify');
-const validator = require('validator');
-const rateLimit = require('express-rate-limit');
-const slowDown = require('express-slow-down');
-const Models = require('../../models/index');
-const constants = require('../constants');
-const pjson = require('../../package.json');
+import express from 'express';
+import fileUpload from 'express-fileupload';
+import { IpFilter, IpDeniedError } from 'express-ipfilter';
+import { rateLimit } from 'express-rate-limit';
+import SlowDown from 'express-slow-down';
+import sortedStringify from 'json-stable-stringify';
+import fs, { readFileSync } from 'fs';
+import { v4 as uuidv4, validate } from 'uuid';
+import https from 'https';
+import Models from '../../models';
+import {
+    SERVICE_API_RATE_LIMIT,
+    SERVICE_API_SLOW_DOWN,
+    SERVICE_API_ROUTES,
+    NETWORK_HANDLER_TIMEOUT,
+    NETWORK_PROTOCOLS,
+    ERROR_TYPE,
+} from '../constants.js';
+
+const pjson = JSON.parse(readFileSync('../../package.json'));
 
 class RpcController {
     constructor(ctx) {
@@ -75,7 +81,7 @@ class RpcController {
         });
 
         this.app.use(
-            ipfilter(formattedWhitelist, {
+            IpFilter(formattedWhitelist, {
                 mode: 'allow',
                 log: false,
             }),
@@ -107,14 +113,14 @@ class RpcController {
                     default:
                         return next(error);
                 }
-                this.logger.error({ msg: message, Event_name: constants.ERROR_TYPE.API_ERROR_400 });
+                this.logger.error({ msg: message, Event_name: ERROR_TYPE.API_ERROR_400 });
                 return res.status(code).send(message);
             }
             return next(error);
         });
 
         this.app.use((error, req, res) => {
-            this.logger.error({ msg: error, Event_name: constants.ERROR_TYPE.API_ERROR_500 });
+            this.logger.error({ msg: error, Event_name: ERROR_TYPE.API_ERROR_500 });
             return res.status(500).send(error);
         });
     }
@@ -136,57 +142,57 @@ class RpcController {
 
     initializeRateLimitMiddleware() {
         this.rateLimitMiddleware = rateLimit({
-            windowMs: constants.SERVICE_API_RATE_LIMIT.TIME_WINDOW_MILLS,
-            max: constants.SERVICE_API_RATE_LIMIT.MAX_NUMBER,
-            message: `Too many requests sent, maximum number of requests per minute is ${constants.SERVICE_API_RATE_LIMIT.MAX_NUMBER}`,
+            windowMs: SERVICE_API_RATE_LIMIT.TIME_WINDOW_MILLS,
+            max: SERVICE_API_RATE_LIMIT.MAX_NUMBER,
+            message: `Too many requests sent, maximum number of requests per minute is ${SERVICE_API_RATE_LIMIT.MAX_NUMBER}`,
             standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
             legacyHeaders: false, // Disable the `X-RateLimit-*` headers
         });
     }
 
     initializeSlowDownMiddleWare() {
-        this.slowDownMiddleware = slowDown({
-            windowMs: constants.SERVICE_API_SLOW_DOWN.TIME_WINDOW_MILLS,
-            delayAfter: constants.SERVICE_API_SLOW_DOWN.DELAY_AFTER_SECONDS,
-            delayMs: constants.SERVICE_API_SLOW_DOWN.DELAY_MILLS,
+        this.slowDownMiddleware = SlowDown({
+            windowMs: SERVICE_API_SLOW_DOWN.TIME_WINDOW_MILLS,
+            delayAfter: SERVICE_API_SLOW_DOWN.DELAY_AFTER_SECONDS,
+            delayMs: SERVICE_API_SLOW_DOWN.DELAY_MILLS,
         });
     }
 
     initializeNetworkApi() {
         this.logger.info(`Network API module enabled on port ${this.config.network.port}`);
 
-        this.networkModuleManager.handleMessage(constants.NETWORK_PROTOCOLS.STORE, (message, remotePeerId) =>
-            this.publishController.handleNetworkStoreRequest(message, remotePeerId)
+        this.networkModuleManager.handleMessage(NETWORK_PROTOCOLS.STORE, (message, remotePeerId) =>
+            this.publishController.handleNetworkStoreRequest(message, remotePeerId),
         );
 
-        this.networkModuleManager.handleMessage(constants.NETWORK_PROTOCOLS.RESOLVE, (result) =>
+        this.networkModuleManager.handleMessage(NETWORK_PROTOCOLS.RESOLVE, (result) =>
             this.queryService.handleResolve(result),
         );
 
         this.networkModuleManager.handleMessage(
-            constants.NETWORK_PROTOCOLS.SEARCH,
+            NETWORK_PROTOCOLS.SEARCH,
             (result) => this.queryService.handleSearch(result),
             {
                 async: true,
-                timeout: constants.NETWORK_HANDLER_TIMEOUT,
+                timeout: NETWORK_HANDLER_TIMEOUT,
             },
         );
 
-        this.networkModuleManager.handleMessage(constants.NETWORK_PROTOCOLS.SEARCH_RESULT, (result) =>
+        this.networkModuleManager.handleMessage(NETWORK_PROTOCOLS.SEARCH_RESULT, (result) =>
             this.queryService.handleSearchResult(result),
         );
 
         this.networkModuleManager.handleMessage(
-            constants.NETWORK_PROTOCOLS.SEARCH_ASSERTIONS,
+            NETWORK_PROTOCOLS.SEARCH_ASSERTIONS,
             (result) => this.queryService.handleSearchAssertions(result),
             {
                 async: true,
-                timeout: constants.NETWORK_HANDLER_TIMEOUT,
+                timeout: NETWORK_HANDLER_TIMEOUT,
             },
         );
 
         this.networkModuleManager.handleMessage(
-            constants.NETWORK_PROTOCOLS.SEARCH_ASSERTIONS_RESULT,
+            NETWORK_PROTOCOLS.SEARCH_ASSERTIONS_RESULT,
             (result) => this.queryService.handleSearchAssertionsResult(result),
         );
 
@@ -200,7 +206,7 @@ class RpcController {
         );
 
         this.app.post(
-            constants.SERVICE_API_ROUTES.PUBLISH,
+            SERVICE_API_ROUTES.PUBLISH,
             this.rateLimitMiddleware,
             this.slowDownMiddleware,
             async (req, res) => {
@@ -209,7 +215,7 @@ class RpcController {
         );
 
         this.app.post(
-            constants.SERVICE_API_ROUTES.PROVISION,
+            SERVICE_API_ROUTES.PROVISION,
             this.rateLimitMiddleware,
             this.slowDownMiddleware,
             async (req, res, next) => {
@@ -218,7 +224,7 @@ class RpcController {
         );
 
         this.app.post(
-            constants.SERVICE_API_ROUTES.UPDATE,
+            SERVICE_API_ROUTES.UPDATE,
             this.rateLimitMiddleware,
             this.slowDownMiddleware,
             async (req, res, next) => {
@@ -233,11 +239,11 @@ class RpcController {
         );
 
         this.app.get(
-            constants.SERVICE_API_ROUTES.RESOLVE,
+            SERVICE_API_ROUTES.RESOLVE,
             this.rateLimitMiddleware,
             this.slowDownMiddleware,
             async (req, res, next) => {
-                const operationId = uuidv1();
+                const operationId = uuidv4();
                 this.logger.emit({
                     msg: 'Started measuring execution of resolve command',
                     Event_name: 'resolve_start',
@@ -286,7 +292,9 @@ class RpcController {
 
                     for (let id of ids) {
                         let isAsset = false;
-                        const { assertionId } = await this.blockchainModuleManager.getAssetProofs(id);
+                        const { assertionId } = await this.blockchainModuleManager.getAssetProofs(
+                            id,
+                        );
                         if (assertionId) {
                             isAsset = true;
                             id = assertionId;
@@ -370,7 +378,7 @@ class RpcController {
                             );
                             const nodes = await this.networkModuleManager.findNodes(
                                 id,
-                                constants.NETWORK_PROTOCOLS.RESOLVE,
+                                NETWORK_PROTOCOLS.RESOLVE,
                                 this.config.replicationFactor,
                             );
                             if (nodes.length < this.config.replicationFactor) {
@@ -427,7 +435,7 @@ class RpcController {
                                 } catch (e) {
                                     this.logger.error({
                                         msg: `Error while resolving data from another node: ${e.message}. ${e.stack}`,
-                                        Event_name: constants.ERROR_TYPE.RESOLVE_ROUTE_ERROR,
+                                        Event_name: ERROR_TYPE.RESOLVE_ROUTE_ERROR,
                                         Event_value1: e.message,
                                         Id_operation: operationId,
                                     });
@@ -478,7 +486,7 @@ class RpcController {
                 } catch (e) {
                     this.logger.error({
                         msg: `Unexpected error at resolve route: ${e.message}. ${e.stack}`,
-                        Event_name: constants.ERROR_TYPE.RESOLVE_ROUTE_ERROR,
+                        Event_name: ERROR_TYPE.RESOLVE_ROUTE_ERROR,
                         Event_value1: e.message,
                         Id_operation: operationId,
                     });
@@ -488,7 +496,7 @@ class RpcController {
         );
 
         this.app.get(
-            constants.SERVICE_API_ROUTES.SEARCH_ASSERTIONS,
+            SERVICE_API_ROUTES.SEARCH_ASSERTIONS,
             this.rateLimitMiddleware,
             this.slowDownMiddleware,
             async (req, res, next) => {
@@ -510,7 +518,7 @@ class RpcController {
                     limit = 500;
                 }
 
-                const operationId = uuidv1();
+                const operationId = uuidv4();
                 let handlerId = null;
                 try {
                     this.logger.emit({
@@ -555,7 +563,7 @@ class RpcController {
                     );
                     let nodes = await this.networkModuleManager.findNodes(
                         query,
-                        constants.NETWORK_PROTOCOLS.SEARCH_ASSERTIONS,
+                        NETWORK_PROTOCOLS.SEARCH_ASSERTIONS,
                         this.config.replicationFactor,
                     );
                     if (nodes.length < this.config.replicationFactor) {
@@ -577,7 +585,7 @@ class RpcController {
                 } catch (e) {
                     this.logger.error({
                         msg: `Unexpected error at search assertions route: ${e.message}. ${e.stack}`,
-                        Event_name: constants.ERROR_TYPE.SEARCH_ASSERTIONS_ROUTE_ERROR,
+                        Event_name: ERROR_TYPE.SEARCH_ASSERTIONS_ROUTE_ERROR,
                         Event_value1: e.message,
                         Id_operation: operationId,
                     });
@@ -594,14 +602,14 @@ class RpcController {
         );
 
         this.app.get(
-            constants.SERVICE_API_ROUTES.SEARCH,
+            SERVICE_API_ROUTES.SEARCH,
             this.rateLimitMiddleware,
             this.slowDownMiddleware,
             async (req, res, next) => {
                 if (!req.query.query || req.params.search !== 'search') {
                     return next({ code: 400, message: 'Params query or ids are necessary.' });
                 }
-                const operationId = uuidv1();
+                const operationId = uuidv4();
                 let handlerId = null;
                 try {
                     this.logger.emit({
@@ -667,7 +675,7 @@ class RpcController {
                         );
                         nodes = await this.networkModuleManager.findNodes(
                             query,
-                            constants.NETWORK_PROTOCOLS.SEARCH,
+                            NETWORK_PROTOCOLS.SEARCH,
                             this.config.replicationFactor,
                         );
                         if (nodes.length < this.config.replicationFactor) {
@@ -711,7 +719,7 @@ class RpcController {
                 } catch (e) {
                     this.logger.error({
                         msg: `Unexpected error at search entities route: ${e.message}. ${e.stack}`,
-                        Event_name: constants.ERROR_TYPE.SEARCH_ENTITIES_ROUTE_ERROR,
+                        Event_name: ERROR_TYPE.SEARCH_ENTITIES_ROUTE_ERROR,
                         Event_value1: e.message,
                         Id_operation: operationId,
                     });
@@ -728,7 +736,7 @@ class RpcController {
         );
 
         this.app.post(
-            constants.SERVICE_API_ROUTES.QUERY,
+            SERVICE_API_ROUTES.QUERY,
             this.rateLimitMiddleware,
             this.slowDownMiddleware,
             async (req, res, next) => {
@@ -748,7 +756,7 @@ class RpcController {
                         )}`,
                     });
                 }
-                const operationId = uuidv1();
+                const operationId = uuidv4();
                 let handlerId = null;
                 try {
                     this.logger.emit({
@@ -797,7 +805,7 @@ class RpcController {
                 } catch (e) {
                     this.logger.error({
                         msg: `Unexpected error at query route: ${e.message}. ${e.stack}`,
-                        Event_name: constants.ERROR_TYPE.QUERY_ROUTE_ERROR,
+                        Event_name: ERROR_TYPE.QUERY_ROUTE_ERROR,
                         Event_value1: e.message,
                         Id_operation: operationId,
                     });
@@ -814,14 +822,14 @@ class RpcController {
         );
 
         this.app.post(
-            constants.SERVICE_API_ROUTES.PROOFS,
+            SERVICE_API_ROUTES.PROOFS,
             this.rateLimitMiddleware,
             this.slowDownMiddleware,
             async (req, res, next) => {
                 if (!req.body.nquads) {
                     return next({ code: 400, message: 'Params query and type are necessary.' });
                 }
-                const operationId = uuidv1();
+                const operationId = uuidv4();
                 const handlerIdCachePath = this.fileService.getHandlerIdCachePath();
                 let handlerId = null;
                 try {
@@ -883,7 +891,7 @@ class RpcController {
                 } catch (e) {
                     this.logger.error({
                         msg: `Unexpected error at proofs route: ${e.message}. ${e.stack}`,
-                        Event_name: constants.ERROR_TYPE.PROOFS_ROUTE_ERROR,
+                        Event_name: ERROR_TYPE.PROOFS_ROUTE_ERROR,
                         Event_value1: e.message,
                         Id_operation: operationId,
                     });
@@ -899,7 +907,7 @@ class RpcController {
             },
         );
 
-        this.app.get(constants.SERVICE_API_ROUTES.OPERATION_RESULT, async (req, res, next) => {
+        this.app.get(SERVICE_API_ROUTES.OPERATION_RESULT, async (req, res, next) => {
             if (
                 ![
                     'provision',
@@ -920,7 +928,7 @@ class RpcController {
             }
 
             const { handler_id, operation } = req.params;
-            if (!validator.isUUID(handler_id)) {
+            if (!validate(handler_id)) {
                 return next({
                     code: 400,
                     message: 'Handler id is in wrong format',
@@ -1062,7 +1070,7 @@ class RpcController {
             } catch (e) {
                 this.logger.error({
                     msg: `Error while trying to fetch ${operation} data for handler id ${handler_id}. Error message: ${e.message}. ${e.stack}`,
-                    Event_name: constants.ERROR_TYPE.RESULTS_ROUTE_ERROR,
+                    Event_name: ERROR_TYPE.RESULTS_ROUTE_ERROR,
                     Event_value1: e.message,
                     Id_operation: handler_id,
                 });
@@ -1070,7 +1078,7 @@ class RpcController {
             }
         });
 
-        this.app.get(constants.SERVICE_API_ROUTES.INFO, async (req, res, next) => {
+        this.app.get(SERVICE_API_ROUTES.INFO, async (req, res, next) => {
             try {
                 const { version } = pjson;
 
@@ -1083,7 +1091,7 @@ class RpcController {
                 this.logger.emit({
                     msg: 'Telemetry logging error at node info route',
                     Operation_name: 'Error',
-                    Event_name: constants.ERROR_TYPE.NODE_INFO_ROUTE_ERROR,
+                    Event_name: ERROR_TYPE.NODE_INFO_ROUTE_ERROR,
                     Event_value1: e.message,
                     Id_operation: 'Undefined',
                 });
@@ -1117,4 +1125,4 @@ class RpcController {
     }
 }
 
-module.exports = RpcController;
+export default RpcController;

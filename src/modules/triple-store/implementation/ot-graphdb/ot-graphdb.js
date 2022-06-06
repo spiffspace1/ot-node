@@ -1,30 +1,28 @@
-const { ServerClientConfig, GraphDBServerClient } = require('graphdb').server;
-const { RepositoryConfig, RepositoryType } = require('graphdb').repository;
-const { RDFMimeType } = require('graphdb').http;
-const axios = require('axios');
-const { execSync } = require('child_process');
-const OtTripleStore = require('../ot-triple-store');
+import { http, repository, server as Server } from 'graphdb';
+import axios from 'axios';
+import { execSync } from 'child_process';
+import OtTripleStore from '../ot-triple-store.js';
 
 class OtGraphdb extends OtTripleStore {
     async initialize(config, logger) {
         await super.initialize(config, logger);
-        const serverConfig = new ServerClientConfig(this.config.url)
+        const serverConfig = new Server.ServerClientConfig(this.config.url)
             .setTimeout(40000)
             .setHeaders({
-                Accept: RDFMimeType.N_QUADS,
+                Accept: http.RDFMimeType.N_QUADS,
             })
             .setKeepAlive(true);
-        const server = new GraphDBServerClient(serverConfig);
+        const server = new Server.GraphDBServerClient(serverConfig);
 
         const exists = await server.hasRepository(this.config.repository);
         if (!exists) {
-            const newConfig = new RepositoryConfig(
+            const newConfig = new repository.RepositoryConfig(
                 this.config.repository,
                 '',
                 new Map(),
                 '',
                 'Repo title',
-                RepositoryType.FREE,
+                repository.RepositoryType.FREE,
             );
             // Use the configuration to create new repository
             await server.createRepository(newConfig);
@@ -71,4 +69,4 @@ class OtGraphdb extends OtTripleStore {
     }
 }
 
-module.exports = OtGraphdb;
+export default OtGraphdb;

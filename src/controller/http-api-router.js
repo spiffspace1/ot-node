@@ -1,4 +1,4 @@
-const { HTTP_API_ROUTES } = require('../constants/constants');
+import { HTTP_API_ROUTES } from '../constants/constants.js';
 
 // const supportedVersion = 'v1';
 
@@ -74,4 +74,4 @@ class HttpApiRouter {
     }
 }
 
-module.exports = HttpApiRouter;
+export default HttpApiRouter;

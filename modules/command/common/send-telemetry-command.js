@@ -1,7 +1,7 @@
-const Command = require('../command');
-const constants = require('../../constants');
-const Models = require('../../../models/index');
-const {v1: uuidv1} = require("uuid");
+import { v4 as uuidv4 } from 'uuid';
+import Command from '../command.js';
+import { ERROR_TYPE } from '../../constants.js';
+import Models from '../../../models/index.js';
 
 class SendTelemetryCommand extends Command {
     constructor(ctx) {
@@ -21,26 +21,40 @@ class SendTelemetryCommand extends Command {
             return Command.empty();
         }
 
-        const operationId = uuidv1();
+        const operationId = uuidv4();
 
-        this.telemetryHubModuleManager.aggregateTelemetryData()
+        this.telemetryHubModuleManager
+            .aggregateTelemetryData()
             .then((jsonld) => {
                 if (jsonld) {
                     this.logger.restart();
                     this.initializeTelemetryPublish(operationId);
-                    Models.handler_ids.create({
-                        status: 'PENDING',
-                    }).then((insertedObject) => {
-                        const fileContent = JSON.stringify(jsonld);
-                        const keywords = [`ot-telemetry-${Math.floor(new Date() / (60 * 1000))}`];
-                        this.logger.emit({
-                            msg: 'Finished measuring execution of preparing arguments for publishing',
-                            Event_name: 'publish_prep_args_end',
-                            Operation_name: 'publish_prep_args',
-                            Id_operation: operationId,
+                    Models.handler_ids
+                        .create({
+                            status: 'PENDING',
+                        })
+                        .then((insertedObject) => {
+                            const fileContent = JSON.stringify(jsonld);
+                            const keywords = [
+                                `ot-telemetry-${Math.floor(new Date() / (60 * 1000))}`,
+                            ];
+                            this.logger.emit({
+                                msg: 'Finished measuring execution of preparing arguments for publishing',
+                                Event_name: 'publish_prep_args_end',
+                                Operation_name: 'publish_prep_args',
+                                Id_operation: operationId,
+                            });
+                            this.publishService.publish(
+                                fileContent,
+                                '.json',
+                                keywords,
+                                'public',
+                                undefined,
+                                insertedObject.dataValues.handler_id,
+                                operationId,
+                                true,
+                            );
                         });
-                        this.publishService.publish(fileContent, '.json', keywords, 'public', undefined, insertedObject.dataValues.handler_id, operationId, true);
-                    });
                 }
             })
             .catch((e) => {
@@ -86,7 +100,7 @@ class SendTelemetryCommand extends Command {
     async handleError(error) {
         this.logger.error({
             msg: `Error while sending telemetry data to Telemetry hub: ${error}. ${error.stack}`,
-            Event_name: constants.ERROR_TYPE.SENDING_TELEMETRY_DATA_ERROR,
+            Event_name: ERROR_TYPE.SENDING_TELEMETRY_DATA_ERROR,
         });
     }
 
@@ -110,4 +124,4 @@ class SendTelemetryCommand extends Command {
     }
 }
 
-module.exports = SendTelemetryCommand;
+export default SendTelemetryCommand;

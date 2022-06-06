@@ -1,10 +1,11 @@
-const SHA256 = require('crypto-js/sha256');
-const MerkleTools = require('merkle-tools');
-const sha3 = require('js-sha3');
-const elliptic = require('elliptic');
+import { SHA256 } from 'crypto-js';
+import { keccak256 } from 'js-sha3';
+import { ec } from 'elliptic';
+import MerkleTools from 'merkle-tools';
+import BytesUtilities from '../bytes-utilities';
+
 // eslint-disable-next-line new-cap
-const secp256k1 = new elliptic.ec('secp256k1');
-const BytesUtilities = require('../bytes-utilities');
+const secp256k1 = new ec('secp256k1');
 
 const _slicedToArray = (function () {
     function sliceIterator(arr, i) {
@@ -131,7 +132,7 @@ class MerkleValidation {
 
             if (secp256k1.verify(hash, vrs, pubKeyRecovered)) {
                 const publicKeyRecovered = `0x${pubKeyRecovered.encode('hex', false).slice(2)}`;
-                const publicHash = sha3.keccak256(Buffer.from(publicKeyRecovered.slice(2), 'hex'));
+                const publicHash = keccak256(Buffer.from(publicKeyRecovered.slice(2), 'hex'));
                 const wallet = this.toChecksum(`0x${publicHash.slice(-40)}`);
 
                 return (
@@ -176,7 +177,7 @@ class MerkleValidation {
             );
 
             const publicKeyRecovered = `0x${pubKeyRecovered.encode('hex', false).slice(2)}`;
-            const publicHash = sha3.keccak256(Buffer.from(publicKeyRecovered.slice(2), 'hex'));
+            const publicHash = keccak256(Buffer.from(publicKeyRecovered.slice(2), 'hex'));
             return this.toChecksum(`0x${publicHash.slice(-40)}`);
         } catch (e) {
             return undefined;
@@ -206,7 +207,7 @@ class MerkleValidation {
     }
 
     toChecksum(address) {
-        const addressHash = sha3.keccak256(address.slice(2));
+        const addressHash = keccak256(address.slice(2));
         let checksumAddress = '0x';
         for (let i = 0; i < 40; i += 1) {
             checksumAddress +=
@@ -225,8 +226,8 @@ class MerkleValidation {
         const preamble = `\x19Ethereum Signed Message:\n${message.length}`;
         const preambleBuffer = Buffer.from(preamble);
         const ethMessage = Buffer.concat([preambleBuffer, messageBuffer]);
-        return `0x${sha3.keccak256(ethMessage)}`;
+        return `0x${keccak256(ethMessage)}`;
     }
 }
 
-module.exports = MerkleValidation;
+export default MerkleValidation;

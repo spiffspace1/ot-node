@@ -1,4 +1,4 @@
-const Command = require('../command');
+import Command from '../command.js'
 
 class TestCommand extends Command {
     constructor(ctx) {
@@ -37,4 +37,4 @@ class TestCommand extends Command {
     }
 }
 
-module.exports = TestCommand;
+export default TestCommand;

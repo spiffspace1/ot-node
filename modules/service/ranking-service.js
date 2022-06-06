@@ -1,4 +1,4 @@
-const KadIdentityRanking = require('../../external/kad-identity-ranking-service');
+import KadIdentityRanking from '../../external/kad-identity-ranking-service.js';
 
 class RankingService {
     constructor(ctx) {
@@ -19,4 +19,4 @@ class RankingService {
     }
 }
 
-module.exports = RankingService;
+export default RankingService;

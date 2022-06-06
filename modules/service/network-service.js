@@ -1,5 +1,5 @@
-const { v1: uuidv1 } = require('uuid');
-const Libp2p = require('../../external/libp2p-service');
+import { v4 as uuidv4 } from 'uuid';
+import Libp2p from '../../external/libp2p-service.js';
 
 class NetworkService {
     constructor(ctx) {
@@ -31,7 +31,7 @@ class NetworkService {
      * @returns Promise{Iterable<PeerId>}
      */
     async findNodes(key, protocol, limit) {
-        const Id_operation = uuidv1();
+        const Id_operation = uuidv4();
         this.logger.emit({
             msg: 'Started measuring execution of find nodes', Event_name: 'find_nodes_start', Operation_name: 'find_nodes', Id_operation,
         });
@@ -95,4 +95,4 @@ class NetworkService {
     }
 }
 
-module.exports = NetworkService;
+export default NetworkService;

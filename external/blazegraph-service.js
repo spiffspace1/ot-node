@@ -1,5 +1,5 @@
-const axios = require('axios');
-const SparqlqueryService = require('./sparqlquery-service');
+import axios from 'axios';
+import SparqlqueryService from './sparqlquery-service.js';
 
 class BlazegraphService extends SparqlqueryService{
     constructor(config) {
@@ -27,4 +27,4 @@ class BlazegraphService extends SparqlqueryService{
     }
 }
 
-module.exports = BlazegraphService;
+export default BlazegraphService;

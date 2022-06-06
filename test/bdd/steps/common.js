@@ -1,10 +1,9 @@
-const { Given } = require('@cucumber/cucumber');
-const { expect } = require('chai');
-const { fork } = require('child_process');
-const fs = require('fs');
-const DkgClientHelper = require('../../utilities/dkg-client-helper');
-
-const otNodeProcessPath = './test/bdd/steps/lib/ot-node-process.js';
+import fs from 'fs';
+import { expect } from 'chai';
+import { Given } from '@cucumber/cucumber';
+import { fork } from 'child_process';
+import DkgClientHelper from '../../utilities/dkg-client-helper.js';
+import otNodeProcessPath from './lib/ot-node-process.js'
 
 function getBlockchainConfiguration(localBlockchain, privateKey, publicKey) {
     return [

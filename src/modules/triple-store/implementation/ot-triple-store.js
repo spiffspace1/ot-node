@@ -1,5 +1,5 @@
-const Engine = require('@comunica/query-sparql').QueryEngine;
-const constants = require('./triple-store-constants');
+import { QueryEngine as Engine } from '@comunica/query-sparql';
+import constants from './triple-store-constants.js';
 
 class OtTripleStore {
     async initialize(config, logger) {
@@ -250,4 +250,4 @@ class OtTripleStore {
     }
 }
 
-module.exports = OtTripleStore;
+export default OtTripleStore;

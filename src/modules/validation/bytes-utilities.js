@@ -1,5 +1,5 @@
-const BN = require('bn.js');
-const _ = require('underscore');
+import _ from 'underscore';
+import BN from 'bn.js';
 
 class BytesUtilities {
     /**
@@ -105,4 +105,4 @@ class BytesUtilities {
     }
 }
 
-module.exports = BytesUtilities;
+export default BytesUtilities;

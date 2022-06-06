@@ -1,6 +1,8 @@
-const sortedStringify = require('json-stable-stringify');
-const Command = require('../../command');
-const constants = require('../../../constants');
+import sortedStringify from 'json-stable-stringify';
+import Command from '../../command.js'
+import {
+    ERROR_TYPE,
+} from '../../../constants.js'
 
 class SubmitProofsCommand extends Command {
     constructor(ctx) {
@@ -37,7 +39,7 @@ class SubmitProofsCommand extends Command {
             if (isTelemetry) {
                 result = await this.blockchainQueue.unshift({ method, assertion });
             } else {
-                if (this.blockchainQueue.length() > constants.BLOCKCHAIN_QUEUE_LIMIT) {
+                if (this.blockchainQueue.length() > BLOCKCHAIN_QUEUE_LIMIT) {
                     throw new Error('Blockchain queue is full');
                 }
                 result = await this.blockchainQueue.push({ method, assertion });
@@ -65,7 +67,7 @@ class SubmitProofsCommand extends Command {
                 Id_operation: operationId,
             });
         } catch (e) {
-            await this.handleError(handlerId, e, constants.ERROR_TYPE.SUBMIT_PROOFS_ERROR, true);
+            await this.handleError(handlerId, e, ERROR_TYPE.SUBMIT_PROOFS_ERROR, true);
             return Command.empty();
         }
 
@@ -76,14 +78,14 @@ class SubmitProofsCommand extends Command {
         const { assertion, method } = args;
         let result;
         switch (method) {
-        case constants.PUBLISH_METHOD.PUBLISH:
+        case PUBLISH_METHOD.PUBLISH:
             result = await this.blockchainModuleManager.createAssertionRecord(
                 assertion.id,
                 assertion.rootHash,
                 assertion.metadata.issuer,
             );
             break;
-        case constants.PUBLISH_METHOD.PROVISION:
+        case PUBLISH_METHOD.PROVISION:
             result = await this.blockchainModuleManager.registerAsset(
                 assertion.metadata.UALs[0],
                 assertion.metadata.type,
@@ -93,7 +95,7 @@ class SubmitProofsCommand extends Command {
                 1,
             );
             break;
-        case constants.PUBLISH_METHOD.UPDATE:
+        case PUBLISH_METHOD.UPDATE:
             result = await this.blockchainModuleManager.updateAsset(
                 assertion.metadata.UALs[0],
                 assertion.id,
@@ -117,7 +119,7 @@ class SubmitProofsCommand extends Command {
             handlerId,
         } = command.data;
 
-        await this.handleError(handlerId, err, constants.ERROR_TYPE.SUBMIT_PROOFS_ERROR, true);
+        await this.handleError(handlerId, err, ERROR_TYPE.SUBMIT_PROOFS_ERROR, true);
 
         return Command.empty();
     }
@@ -138,4 +140,4 @@ class SubmitProofsCommand extends Command {
     }
 }
 
-module.exports = SubmitProofsCommand;
+export default SubmitProofsCommand;

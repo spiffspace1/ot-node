@@ -1,6 +1,6 @@
-const { v1: uuidv1 } = require('uuid');
-const rank = require('./implementation/kad-identity-ranking')
-const BaseModuleManager = require('../base-module-manager');
+import { v4 as uuidv4 } from 'uuid';
+import rank from './implementation/kad-identity-ranking.js';
+import BaseModuleManager from '../base-module-manager.js';
 
 class NetworkModuleManager extends BaseModuleManager {
     getName() {
@@ -16,7 +16,7 @@ class NetworkModuleManager extends BaseModuleManager {
      */
     async findNodes(key, protocol, limit) {
         if (this.initialized) {
-            const Id_operation = uuidv1();
+            const Id_operation = uuidv4();
             this.logger.emit({
                 msg: 'Started measuring execution of find nodes',
                 Event_name: 'find_nodes_start',
@@ -131,4 +131,4 @@ class NetworkModuleManager extends BaseModuleManager {
     }
 }
 
-module.exports = NetworkModuleManager;
+export default NetworkModuleManager;

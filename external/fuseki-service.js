@@ -1,5 +1,5 @@
-const axios = require('axios');
-const SparqlqueryService = require('./sparqlquery-service');
+import axios from 'axios';
+import SparqlqueryService from './sparqlquery-service.js';
 
 class FusekiService extends SparqlqueryService{
     constructor(config) {
@@ -27,4 +27,4 @@ class FusekiService extends SparqlqueryService{
     }
 }
 
-module.exports = FusekiService;
+export default FusekiService;

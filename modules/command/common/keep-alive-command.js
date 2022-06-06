@@ -1,9 +1,10 @@
-const { v1: uuidv1 } = require('uuid');
-const axios = require('axios');
-const Command = require('../command');
-const pjson = require('../../../package.json');
-const Models = require('../../../models/index');
-const constants = require('../../constants');
+import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
+import Command from '../command.js';
+import { ERROR_TYPE } from '../../constants.js';
+import Models from '../../../models/index.js';
+
+
 
 class KeepAliveCommand extends Command {
     constructor(ctx) {
@@ -11,6 +12,7 @@ class KeepAliveCommand extends Command {
         this.logger = ctx.logger;
         this.config = ctx.config;
         this.validationService = ctx.validationService;
+        this.pjson = ctx.pjson;
     }
 
     /**
@@ -20,7 +22,7 @@ class KeepAliveCommand extends Command {
     async execute(command) {
         const { message } = command.data;
 
-        const Id_operation = uuidv1();
+        const Id_operation = uuidv4();
         this.logger.emit({
             msg: message,
             Event_name: 'keep_alive',
@@ -29,16 +31,17 @@ class KeepAliveCommand extends Command {
         });
 
         const signalingMessage = {
-            nodeVersion: pjson.version,
+            nodeVersion: this.pjson.version,
             autoUpdate: { enabled: this.config.modules.autoUpdater.enabled },
             telemetry: {
                 enabled: this.config.telemetryHub.enabled,
             },
         };
         try {
-            signalingMessage.issuerWallet = this.config.modules.blockchain.implementation['web3-service'].config.publicKey;
+            signalingMessage.issuerWallet =
+                this.config.modules.blockchain.implementation['web3-service'].config.publicKey;
             signalingMessage.kademliaNodeId = this.config.network.peerId._idB58String;
-            signalingMessage.nodeVersion = pjson.version;
+            signalingMessage.nodeVersion = this.pjson.version;
             signalingMessage.telemetry.latestAssertions = (
                 await Models.assertions.findAll({
                     limit: 5,
@@ -55,7 +58,7 @@ class KeepAliveCommand extends Command {
         } catch (e) {
             this.logger.error({
                 msg: `An error has occurred with signaling data error: ${e}, stack: ${e.stack}`,
-                Event_name: constants.ERROR_TYPE.KEEP_ALIVE_ERROR,
+                Event_name: ERROR_TYPE.KEEP_ALIVE_ERROR,
             });
         }
 
@@ -76,7 +79,7 @@ class KeepAliveCommand extends Command {
 
         const that = this;
         axios(config).catch((e) => {
-            that.handleError(uuidv1(), e, constants.ERROR_TYPE.KEEP_ALIVE_ERROR, false);
+            that.handleError(uuidv4(), e, ERROR_TYPE.KEEP_ALIVE_ERROR, false);
         });
         return Command.repeat();
     }
@@ -101,4 +104,4 @@ class KeepAliveCommand extends Command {
     }
 }
 
-module.exports = KeepAliveCommand;
+export default KeepAliveCommand;

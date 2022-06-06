@@ -1,15 +1,14 @@
-const sortedStringify = require('json-stable-stringify');
-const MarkleValidation = require('../../external/merkle-validation-service');
+import sortedStringify from 'json-stable-stringify';
+import MerkleValidationService from '../../external/merkle-validation-service.js';
 
 class ValidationService {
     constructor(ctx) {
         this.config = ctx.config;
         this.logger = ctx.logger;
-        this.constants = ctx.constants;
     }
 
     initialize() {
-        this.implementation = new MarkleValidation();
+        this.implementation = new MerkleValidationService();
         return this.implementation.initialize(this.logger);
     }
 
@@ -62,4 +61,4 @@ class ValidationService {
     }
 }
 
-module.exports = ValidationService;
+export default ValidationService;

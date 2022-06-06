@@ -1,4 +1,4 @@
-const Models = require('../../models/index');
+import Models from '../../models/index.js'
 
 /**
  * Describes one command handler
@@ -171,4 +171,4 @@ class Command {
     }
 }
 
-module.exports = Command;
+export default Command;

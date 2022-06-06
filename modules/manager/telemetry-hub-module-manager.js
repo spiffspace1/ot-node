@@ -1,4 +1,4 @@
-const BaseModuleManager = require('./base-module-manager');
+import BaseModuleManager from './base-module-manager.js'
 
 class TelemetryHubModuleManager extends BaseModuleManager {
     getName() {
@@ -20,4 +20,4 @@ class TelemetryHubModuleManager extends BaseModuleManager {
     }
 }
 
-module.exports = TelemetryHubModuleManager;
+export default TelemetryHubModuleManager;

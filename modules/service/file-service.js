@@ -1,7 +1,6 @@
-const path = require('path');
-const { exists, mkdir } = require('fs');
-const fs = require('fs');
-const appRootPath = require('app-root-path');
+import path from 'path';
+import { exists, mkdir, writeFile, readFile, unlink } from 'fs';
+import appRootPath from "app-root-path";
 
 const MIGRATION_FOLDER_NAME = 'migrations';
 
@@ -29,7 +28,7 @@ class FileService {
                 } else {
                     const fullpath = path.join(directory, filename);
                     try {
-                        fs.writeFile(fullpath, data, (err) => {
+                        writeFile(fullpath, data, (err) => {
                             if (err) {
                                 reject(err);
                             } else {
@@ -63,7 +62,7 @@ class FileService {
         return new Promise((resolve, reject) => {
             exists(filePath, (exist) => {
                 if (exist) {
-                    fs.readFile(filePath, (err, data) => {
+                    readFile(filePath, (err, data) => {
                         if (err) {
                             reject(err);
                         } else {
@@ -89,7 +88,7 @@ class FileService {
         return new Promise((resolve, reject) => {
             exists(filePath, (exist) => {
                 if (exist) {
-                    fs.unlink(filePath, (err) => {
+                    unlink(filePath, (err) => {
                         if (err) {
                             reject(err);
                         } else {
@@ -127,4 +126,4 @@ class FileService {
     }
 }
 
-module.exports = FileService;
+export default FileService;

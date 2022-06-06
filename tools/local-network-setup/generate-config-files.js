@@ -1,7 +1,7 @@
-const path = require('path');
-const fs = require('fs');
-const { execSync } = require('child_process');
-require('dotenv').config('.env');
+import path from 'path';
+import fs from 'fs';
+import { execSync } from 'child_process';
+import 'dotenv/config'
 
 const numberOfNodes = process.argv.length === 3 ? parseInt(process.argv[2], 10) : 4;
 

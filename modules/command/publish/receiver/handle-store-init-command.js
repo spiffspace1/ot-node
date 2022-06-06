@@ -1,5 +1,10 @@
-const Command = require('../../command');
-const constants = require('../../../constants');
+import Command from '../../command.js';
+import {
+    ERROR_TYPE,
+    NETWORK_PROTOCOLS,
+    REMOVE_SESSION_COMMAND_DELAY,
+    NETWORK_MESSAGE_TYPES,
+} from '../../../constants.js';
 
 class HandleStoreInitCommand extends Command {
     constructor(ctx) {
@@ -24,19 +29,19 @@ class HandleStoreInitCommand extends Command {
                 data: { sessionId: message.header.sessionId },
                 transactional: false,
             },
-            constants.REMOVE_SESSION_COMMAND_DELAY,
+            REMOVE_SESSION_COMMAND_DELAY,
         );
 
         const response = {
             header: {
                 sessionId: message.header.sessionId,
-                messageType: constants.NETWORK_MESSAGE_TYPES.RESPONSES.ACK,
+                messageType: NETWORK_MESSAGE_TYPES.RESPONSES.ACK,
             },
             data: {},
         };
 
         await this.networkModuleManager
-            .sendMessageResponse(constants.NETWORK_PROTOCOLS.STORE, remotePeerId, response)
+            .sendMessageResponse(NETWORK_PROTOCOLS.STORE, remotePeerId, response)
             .catch((e) => {
                 this.handleError(
                     operationId,
@@ -61,7 +66,7 @@ class HandleStoreInitCommand extends Command {
         this.logger.error({
             msg,
             Operation_name: 'Error',
-            Event_name: constants.ERROR_TYPE.HANDLE_STORE_INIT_ERROR,
+            Event_name: ERROR_TYPE.HANDLE_STORE_INIT_ERROR,
             Event_value1: error.message,
             Id_operation: handlerId,
         });
@@ -83,4 +88,4 @@ class HandleStoreInitCommand extends Command {
     }
 }
 
-module.exports = HandleStoreInitCommand;
+export default HandleStoreInitCommand;

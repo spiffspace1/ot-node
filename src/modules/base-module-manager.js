@@ -1,4 +1,6 @@
-const constants = require('../../modules/constants');
+import {
+    ERROR_TYPE,
+} from '../../modules/constants.js';
 
 class BaseModuleManager {
     constructor(ctx) {
@@ -56,7 +58,7 @@ class BaseModuleManager {
         } catch (e) {
             this.logger.error({
                 msg: e.message,
-                Event_name: constants.ERROR_TYPE.MODULE_INITIALIZATION_ERROR,
+                Event_name: ERROR_TYPE.MODULE_INITIALIZATION_ERROR,
             });
             return false;
         }
@@ -75,4 +77,4 @@ class BaseModuleManager {
     }
 }
 
-module.exports = BaseModuleManager;
+export default BaseModuleManager;

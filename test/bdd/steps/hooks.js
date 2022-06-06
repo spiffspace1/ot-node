@@ -1,8 +1,9 @@
-require('dotenv').config();
-const { Before, BeforeAll, After, AfterAll } = require('@cucumber/cucumber');
-const slugify = require('slugify');
-const fs = require('fs');
-const { ServerClientConfig, GraphDBServerClient } = require('ot-graphdb').server;
+import 'dotenv/config'
+import slugify from 'slugify';
+import { Before, BeforeAll, After, AfterAll } from '@cucumber/cucumber';
+import fs from 'fs';
+import ServerClientConfig from 'graphdb/lib/server/server-client-config'
+import GraphDBServerClient from 'graphdb/lib/server/graphdb-server-client'
 
 process.env.NODE_ENV = 'test';
 

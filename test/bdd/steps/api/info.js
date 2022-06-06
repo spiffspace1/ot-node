@@ -1,5 +1,5 @@
-const { When, Then } = require('@cucumber/cucumber');
-const assert = require('assert');
+import { When, Then } from '@cucumber/cucumber';
+import assert from 'chai';
 
 let info = {};
 

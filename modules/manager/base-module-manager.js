@@ -1,4 +1,4 @@
-const appRootPath = require('app-root-path');
+import appRootPath from "app-root-path";
 
 class BaseModuleManager {
     static EXCLUSIVE = 'exclusive';
@@ -43,4 +43,4 @@ class BaseModuleManager {
     }
 }
 
-module.exports = BaseModuleManager;
+export default BaseModuleManager;

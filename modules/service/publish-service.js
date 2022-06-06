@@ -1,6 +1,15 @@
-const { v1: uuidv1 } = require('uuid');
-const sleep = require('sleep-async')().Promise;
-const constants = require('../constants');
+import { setTimeout } from 'timers/promises';
+import { v4 as uuidv4 } from 'uuid';
+import {
+    ERROR_TYPE,
+    PUBLISH_METHOD,
+    NETWORK_PROTOCOLS,
+    NETWORK_RESPONSES,
+    STORE_MAX_RETRIES,
+    DID_PREFIX,
+    STORE_BUSY_REPEAT_INTERVAL_IN_MILLS,
+    BUSYNESS_LIMITS,
+} from '../constants.js';
 
 class PublishService {
     constructor(ctx) {
@@ -31,10 +40,7 @@ class PublishService {
                 Operation_name: 'publish_canonization',
                 Id_operation: operationId,
             });
-            let {
-                assertion,
-                nquads,
-            } = await this.dataService.canonize(fileContent, fileExtension);
+            let { assertion, nquads } = await this.dataService.canonize(fileContent, fileExtension);
             this.logger.emit({
                 msg: 'Finished measuring execution of data canonization',
                 Event_name: 'publish_canonization_end',
@@ -51,17 +57,17 @@ class PublishService {
             assertion.metadata.visibility = visibility;
             assertion.metadata.keywords = keywords;
             assertion.metadata.keywords.sort();
-            let method = constants.PUBLISH_METHOD.PUBLISH;
+            let method = PUBLISH_METHOD.PUBLISH;
             if (ual === null) {
-                method = constants.PUBLISH_METHOD.PROVISION;
+                method = PUBLISH_METHOD.PROVISION;
                 ual = this.validationService.calculateHash(
-                    assertion.metadata.timestamp
-                    + assertion.metadata.type
-                    + assertion.metadata.issuer,
+                    assertion.metadata.timestamp +
+                        assertion.metadata.type +
+                        assertion.metadata.issuer,
                 );
                 assertion.metadata.UALs = [ual];
             } else if (ual !== undefined) {
-                method = constants.PUBLISH_METHOD.UPDATE;
+                method = PUBLISH_METHOD.UPDATE;
                 assertion.metadata.UALs = [ual];
             }
 
@@ -94,11 +100,16 @@ class PublishService {
 
             const handlerIdCachePath = this.fileService.getHandlerIdCachePath();
 
-            const documentPath = await this.fileService
-                .writeContentsToFile(handlerIdCachePath, handlerId,
-                    await this.workerPool.exec('JSONStringify', [{
-                        nquads, assertion,
-                    }]));
+            const documentPath = await this.fileService.writeContentsToFile(
+                handlerIdCachePath,
+                handlerId,
+                await this.workerPool.exec('JSONStringify', [
+                    {
+                        nquads,
+                        assertion,
+                    },
+                ]),
+            );
 
             const commandSequence = [
                 'submitProofsCommand',
@@ -111,7 +122,11 @@ class PublishService {
                 sequence: commandSequence.slice(1),
                 delay: 0,
                 data: {
-                    documentPath, handlerId, method, isTelemetry, operationId,
+                    documentPath,
+                    handlerId,
+                    method,
+                    isTelemetry,
+                    operationId,
                 },
                 transactional: false,
             });
@@ -131,18 +146,15 @@ class PublishService {
         // await this.networkModuleManager.store(node, topic, {});
         let retries = 0;
         let response = await this.networkModuleManager.sendMessage(
-            constants.NETWORK_PROTOCOLS.STORE,
+            NETWORK_PROTOCOLS.STORE,
             assertion,
             node,
         );
-        while (
-            response === constants.NETWORK_RESPONSES.BUSY
-            && retries < constants.STORE_MAX_RETRIES
-        ) {
+        while (response === NETWORK_RESPONSES.BUSY && retries < STORE_MAX_RETRIES) {
             retries += 1;
-            await sleep.sleep(constants.STORE_BUSY_REPEAT_INTERVAL_IN_MILLS);
+            await setTimeout(STORE_BUSY_REPEAT_INTERVAL_IN_MILLS);
             response = await this.networkModuleManager.sendMessage(
-                constants.NETWORK_PROTOCOLS.STORE,
+                NETWORK_PROTOCOLS.STORE,
                 assertion,
                 node,
             );
@@ -153,11 +165,11 @@ class PublishService {
 
     async handleStore(data) {
         if (!data || data.rdf) return false;
-        if (this.dataService.isNodeBusy(constants.BUSYNESS_LIMITS.HANDLE_STORE)) {
-            return constants.NETWORK_RESPONSES.BUSY;
+        if (this.dataService.isNodeBusy(BUSYNESS_LIMITS.HANDLE_STORE)) {
+            return NETWORK_RESPONSES.BUSY;
         }
 
-        const operationId = uuidv1();
+        const operationId = uuidv4();
         this.logger.emit({
             msg: 'Started measuring execution of handle store command',
             Event_name: 'handle_store_start',
@@ -171,7 +183,7 @@ class PublishService {
 
             // todo check root hash on the blockchain
             if (status) {
-                await this.dataService.insert(data.nquads.join('\n'), `${constants.DID_PREFIX}:${data.id}`);
+                await this.dataService.insert(data.nquads.join('\n'), `${DID_PREFIX}:${data.id}`);
                 this.logger.info(`Assertion ${data.id} has been successfully inserted`);
             }
 
@@ -193,7 +205,7 @@ class PublishService {
             this.logger.error({
                 msg: `Error while handling store: ${e} - ${e.stack}`,
                 Operation_name: 'Error',
-                Event_name: constants.ERROR_TYPE.HANDLE_STORE_ERROR,
+                Event_name: ERROR_TYPE.HANDLE_STORE_ERROR,
                 Id_operation: operationId,
             });
             return false;
@@ -201,4 +213,4 @@ class PublishService {
     }
 }
 
-module.exports = PublishService;
+export default PublishService;

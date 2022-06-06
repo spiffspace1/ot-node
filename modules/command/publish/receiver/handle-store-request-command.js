@@ -1,5 +1,10 @@
-const Command = require('../../command');
-const constants = require('../../../constants');
+import Command from '../../command.js';
+import {
+    DID_PREFIX,
+    NETWORK_MESSAGE_TYPES,
+    NETWORK_PROTOCOLS,
+    ERROR_TYPE,
+} from '../../../constants.js';
 
 class HandleStoreRequestCommand extends Command {
     constructor(ctx) {
@@ -25,7 +30,7 @@ class HandleStoreRequestCommand extends Command {
             if (status) {
                 await this.dataService.insert(
                     message.data.nquads.join('\n'),
-                    `${constants.DID_PREFIX}:${message.data.id}`,
+                    `${DID_PREFIX}:${message.data.id}`,
                 );
                 this.logger.info(`Assertion ${message.data.id} has been successfully inserted`);
             }
@@ -37,14 +42,14 @@ class HandleStoreRequestCommand extends Command {
             header: {
                 sessionId: message.header.sessionId,
                 messageType: status
-                    ? constants.NETWORK_MESSAGE_TYPES.RESPONSES.ACK
-                    : constants.NETWORK_MESSAGE_TYPES.RESPONSES.NACK,
+                    ? NETWORK_MESSAGE_TYPES.RESPONSES.ACK
+                    : NETWORK_MESSAGE_TYPES.RESPONSES.NACK,
             },
             data: {},
         };
 
         await this.networkModuleManager
-            .sendMessageResponse(constants.NETWORK_PROTOCOLS.STORE, remotePeerId, response)
+            .sendMessageResponse(NETWORK_PROTOCOLS.STORE, remotePeerId, response)
             .catch((e) => {
                 this.handleError(
                     operationId,
@@ -69,7 +74,7 @@ class HandleStoreRequestCommand extends Command {
         this.logger.error({
             msg,
             Operation_name: 'Error',
-            Event_name: constants.ERROR_TYPE.HANDLE_STORE_REQUEST_ERROR,
+            Event_name: ERROR_TYPE.HANDLE_STORE_REQUEST_ERROR,
             Event_value1: error.message,
             Id_operation: handlerId,
         });
@@ -91,4 +96,4 @@ class HandleStoreRequestCommand extends Command {
     }
 }
 
-module.exports = HandleStoreRequestCommand;
+export default HandleStoreRequestCommand;

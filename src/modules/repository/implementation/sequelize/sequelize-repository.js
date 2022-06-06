@@ -1,8 +1,11 @@
-const mysql = require('mysql2');
-const { exec } = require('child_process');
-const path = require('path');
-const fs = require('fs');
-const Sequelize = require('sequelize');
+import { createConnection } from 'mysql2';
+import { fileURLToPath } from 'url'
+import { dirname , join } from 'path'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+import fs from 'fs';
+import { Sequelize } from 'sequelize';
+import { exec } from 'child_process';
 
 class SequelizeRepository {
     async initialize(config, logger) {
@@ -25,7 +28,7 @@ class SequelizeRepository {
     }
 
     async createDatabaseIfNotExists() {
-        const connection = mysql.createConnection({
+        const connection = createConnection({
             host: this.config.host,
             port: this.config.port,
             user: this.config.user,
@@ -36,7 +39,7 @@ class SequelizeRepository {
 
     async runMigrations() {
         return new Promise((resolve, reject) => {
-            const configurationPath = path.join(__dirname, 'config', 'sequelizeConfig.js');
+            const configurationPath = join(__dirname, 'config', 'sequelizeConfig.js');
             const migrate = exec(
                 `npx sequelize --config=${configurationPath} db:migrate`,
                 { env: process.env },
@@ -51,7 +54,7 @@ class SequelizeRepository {
     }
 
     async loadModels() {
-        const modelsDirectory = path.join(__dirname, 'models');
+        const modelsDirectory = join(__dirname, 'models');
         // disable automatic timestamps
         this.config.define = {
             timestamps: false,
@@ -67,7 +70,7 @@ class SequelizeRepository {
             .filter((file) => file.indexOf('.') !== 0 && file.slice(-3) === '.js')
             .forEach((file) => {
                 // eslint-disable-next-line global-require,import/no-dynamic-require
-                const model = require(path.join(modelsDirectory, file))(
+                const model = require(join(modelsDirectory, file))(
                     sequelize,
                     Sequelize.DataTypes,
                 );
@@ -90,4 +93,4 @@ class SequelizeRepository {
     }
 }
 
-module.exports = SequelizeRepository;
+export default SequelizeRepository;

@@ -1,5 +1,11 @@
-const { v1: uuidv1 } = require('uuid');
-const constants = require('../constants');
+import { v4 as uuidv4 } from 'uuid';
+import {
+    RESOLVE_MAX_TIME_MILLIS
+    NETWORK_PROTOCOLS,
+    NETWORK_RESPONSES,
+    DID_PREFIX,
+    BUSYNESS_LIMITS,
+} from '../constants.js';
 
 class QueryService {
     constructor(ctx) {
@@ -15,10 +21,10 @@ class QueryService {
         const resolvePromise = new Promise(async (resolve, reject) => {
             const timer = setTimeout(() => {
                 resolve(null);
-            }, constants.RESOLVE_MAX_TIME_MILLIS);
+            }, RESOLVE_MAX_TIME_MILLIS);
 
             const result = await this.networkModuleManager.sendMessage(
-                constants.NETWORK_PROTOCOLS.RESOLVE,
+                NETWORK_PROTOCOLS.RESOLVE,
                 id,
                 node,
             );
@@ -42,8 +48,8 @@ class QueryService {
             Id_operation: operationId,
         });
         if (!result
-            || (Array.isArray(result) && result[0] === constants.NETWORK_RESPONSES.ACK)
-            || result === constants.NETWORK_RESPONSES.BUSY) {
+            || (Array.isArray(result) && result[0] === NETWORK_RESPONSES.ACK)
+            || result === NETWORK_RESPONSES.BUSY) {
             return null;
         }
 
@@ -85,18 +91,18 @@ class QueryService {
         });
 
         if (status && load) {
-            await this.dataService.insert(rawNquads.join('\n'), `${constants.DID_PREFIX}:${assertion.jsonld.metadata.id}`);
+            await this.dataService.insert(rawNquads.join('\n'), `${DID_PREFIX}:${assertion.jsonld.metadata.id}`);
             this.logger.info(`Assertion ${assertion.jsonld.metadata.id} has been successfully inserted`);
         }
         return status ? assertion : null;
     }
 
     async handleResolve(id) {
-        if (this.dataService.isNodeBusy(constants.BUSYNESS_LIMITS.HANDLE_RESOLVE)) {
-            return constants.NETWORK_RESPONSES.BUSY;
+        if (this.dataService.isNodeBusy(BUSYNESS_LIMITS.HANDLE_RESOLVE)) {
+            return NETWORK_RESPONSES.BUSY;
         }
 
-        const operationId = uuidv1();
+        const operationId = uuidv4();
         this.logger.emit({
             msg: 'Started measuring execution of handle resolve command',
             Event_name: 'handle_resolve_start',
@@ -124,7 +130,7 @@ class QueryService {
 
     async search(data, node) {
         const result = await this.networkModuleManager.sendMessage(
-            constants.NETWORK_PROTOCOLS.SEARCH,
+            NETWORK_PROTOCOLS.SEARCH,
             data,
             node,
         );
@@ -132,11 +138,11 @@ class QueryService {
     }
 
     async handleSearch(request) {
-        if (this.dataService.isNodeBusy(constants.BUSYNESS_LIMITS.HANDLE_SEARCH_ENTITIES)) {
-            return constants.NETWORK_RESPONSES.BUSY;
+        if (this.dataService.isNodeBusy(BUSYNESS_LIMITS.HANDLE_SEARCH_ENTITIES)) {
+            return NETWORK_RESPONSES.BUSY;
         }
 
-        const operationId = uuidv1();
+        const operationId = uuidv4();
         this.logger.emit({
             msg: 'Started measuring execution of handle search command',
             Event_name: 'handle_search_start',
@@ -170,12 +176,12 @@ class QueryService {
     }
 
     async handleSearchResult(request) {
-        if (request === constants.NETWORK_RESPONSES.BUSY) {
+        if (request === NETWORK_RESPONSES.BUSY) {
             return false;
         }
 
         // TODO: add mutex
-        const operationId = uuidv1();
+        const operationId = uuidv4();
         this.logger.emit({
             msg: 'Started measuring execution of handle search result command',
             Event_name: 'handle_search_result_start',
@@ -244,7 +250,7 @@ class QueryService {
 
     async searchAssertions(data, node) {
         const result = await this.networkModuleManager.sendMessage(
-            constants.NETWORK_PROTOCOLS.SEARCH_ASSERTIONS,
+            NETWORK_PROTOCOLS.SEARCH_ASSERTIONS,
             data,
             node,
         );
@@ -252,11 +258,11 @@ class QueryService {
     }
 
     async handleSearchAssertions(request) {
-        if (this.dataService.isNodeBusy(constants.BUSYNESS_LIMITS.HANDLE_SEARCH_ASSERTIONS)) {
-            return constants.NETWORK_RESPONSES.BUSY;
+        if (this.dataService.isNodeBusy(BUSYNESS_LIMITS.HANDLE_SEARCH_ASSERTIONS)) {
+            return NETWORK_RESPONSES.BUSY;
         }
 
-        const operationId = uuidv1();
+        const operationId = uuidv4();
         this.logger.emit({
             msg: 'Started measuring execution of handle search assertions command',
             Event_name: 'handle_search_assertions_start',
@@ -277,12 +283,12 @@ class QueryService {
     }
 
     async handleSearchAssertionsResult(request) {
-        if (request === constants.NETWORK_RESPONSES.BUSY) {
+        if (request === NETWORK_RESPONSES.BUSY) {
             return false;
         }
 
         // TODO: add mutex
-        const operationId = uuidv1();
+        const operationId = uuidv4();
         this.logger.emit({
             msg: 'Started measuring execution of handle search assertions result command',
             Event_name: 'handle_search_assertions_result_start',
@@ -334,4 +340,4 @@ class QueryService {
     }
 }
 
-module.exports = QueryService;
+export default QueryService;

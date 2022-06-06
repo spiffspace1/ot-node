@@ -1,17 +1,18 @@
-const { execSync } = require('child_process');
-const DeepExtend = require('deep-extend');
-const rc = require('rc');
-const fs = require('fs');
-const queue = require('fastq');
-const appRootPath = require('app-root-path');
-const path = require('path');
-const DependencyInjection = require('./modules/service/dependency-injection');
-const Logger = require('./modules/logger/logger');
-const constants = require('./modules/constants');
-const pjson = require('./package.json');
-const configjson = require('./config/config.json');
-const M1FolderStructureInitialMigration = require('./modules/migration/m1-folder-structure-initial-migration');
-const FileService = require('./modules/service/file-service');
+import { execSync } from 'child_process';
+import DeepExtend from 'deep-extend';
+import rc from 'rc';
+import fs, { readFileSync } from 'fs';
+import queue from 'fastq';
+import appRootPath from "app-root-path";
+import { join } from 'path';
+import DependencyInjection from './modules/service/dependency-injection.js';
+import Logger from './modules/logger/logger.js';
+import {ERROR_TYPE} from './modules/constants.js';
+import M1FolderStructureInitialMigration from './modules/migration/m1-folder-structure-initial-migration.js';
+import FileService from './modules/service/file-service.js';
+
+const configjson = JSON.parse(readFileSync('./config/config.json'));
+const pjson = JSON.parse(readFileSync('./package.json'));
 
 class OTNode {
     constructor(config) {
@@ -93,7 +94,6 @@ class OTNode {
         this.container = DependencyInjection.initialize();
         DependencyInjection.registerValue(this.container, 'config', this.config);
         DependencyInjection.registerValue(this.container, 'logger', this.logger);
-        DependencyInjection.registerValue(this.container, 'constants', constants);
         DependencyInjection.registerValue(this.container, 'blockchainQueue', queue);
         DependencyInjection.registerValue(this.container, 'tripleStoreQueue', queue);
 
@@ -114,7 +114,7 @@ class OTNode {
         } catch (e) {
             this.logger.error({
                 msg: `Module initialization failed. Error message: ${e.message}`,
-                Event_name: constants.ERROR_TYPE.MODULE_INITIALIZATION_ERROR,
+                Event_name: ERROR_TYPE.MODULE_INITIALIZATION_ERROR,
             });
             process.exit(1);
         }
@@ -128,7 +128,7 @@ class OTNode {
         } catch (e) {
             this.logger.error({
                 msg: `Data module initialization failed. Error message: ${e.message}`,
-                Event_name: constants.ERROR_TYPE.DATA_MODULE_INITIALIZATION_ERROR,
+                Event_name: ERROR_TYPE.DATA_MODULE_INITIALIZATION_ERROR,
             });
         }
     }
@@ -147,7 +147,7 @@ class OTNode {
         } catch (e) {
             this.logger.error({
                 msg: `Operational database module initialization failed. Error message: ${e.message}`,
-                Event_name: constants.ERROR_TYPE.OPERATIONALDB_MODULE_INITIALIZATION_ERROR,
+                Event_name: ERROR_TYPE.OPERATIONALDB_MODULE_INITIALIZATION_ERROR,
             });
         }
     }
@@ -175,7 +175,7 @@ class OTNode {
         } catch (e) {
             this.logger.error({
                 msg: `Validation module initialization failed. Error message: ${e.message}`,
-                Event_name: constants.ERROR_TYPE.VALIDATION_INITIALIZATION_ERROR,
+                Event_name: ERROR_TYPE.VALIDATION_INITIALIZATION_ERROR,
             });
         }
     }
@@ -189,7 +189,7 @@ class OTNode {
         } catch (e) {
             this.logger.error({
                 msg: `Command executor initialization failed. Error message: ${e.message}`,
-                Event_name: constants.ERROR_TYPE.COMMAND_EXECUTOR_INITIALIZATION_ERROR,
+                Event_name: ERROR_TYPE.COMMAND_EXECUTOR_INITIALIZATION_ERROR,
             });
         }
     }
@@ -201,7 +201,7 @@ class OTNode {
         } catch (e) {
             this.logger.error({
                 msg: `RPC service initialization failed. Error message: ${e.message}`,
-                Event_name: constants.ERROR_TYPE.RPC_INITIALIZATION_ERROR,
+                Event_name: ERROR_TYPE.RPC_INITIALIZATION_ERROR,
             });
         }
     }
@@ -232,7 +232,7 @@ class OTNode {
     }
 
     savePrivateKeyInUserConfigurationFile(privateKey) {
-        const configurationFilePath = path.join(appRootPath.path, '..', this.config.configFilename);
+        const configurationFilePath = join(appRootPath.path, '..', this.config.configFilename);
         const configFile = JSON.parse(fs.readFileSync(configurationFilePath));
         configFile.network.privateKey = privateKey;
         fs.writeFileSync(configurationFilePath, JSON.stringify(configFile, null, 2));
@@ -244,4 +244,4 @@ class OTNode {
     }
 }
 
-module.exports = OTNode;
+export default OTNode;

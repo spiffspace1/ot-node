@@ -1,4 +1,4 @@
-const Blockchain = require('../../external/web3-blockchain-service');
+import Blockchain from "../../external/web3-blockchain-service.js";
 
 class BlockchainService {
     constructor(ctx) {
@@ -65,4 +65,4 @@ class BlockchainService {
     }
 }
 
-module.exports = BlockchainService;
+export default BlockchainService;

@@ -1,18 +1,24 @@
-const Libp2p = require('libp2p');
-const { Record } = require('libp2p-record');
-const KadDHT = require('libp2p-kad-dht');
-const Bootstrap = require('libp2p-bootstrap');
-const { NOISE } = require('libp2p-noise');
-const MPLEX = require('libp2p-mplex');
-const TCP = require('libp2p-tcp');
-const pipe = require('it-pipe');
-const lp = require('it-length-prefixed');
-const map = require('it-map');
-const { sha256 } = require('multiformats/hashes/sha2');
-const PeerId = require('peer-id');
-const { InMemoryRateLimiter } = require('rolling-rate-limiter');
-const constants = require('../../../../modules/constants');
-const toobusy = require('toobusy-js');
+import * as lp from 'it-length-prefixed';
+import map from 'it-map';
+import pipe from 'it-pipe';
+import Libp2p from 'libp2p';
+import { Record } from 'libp2p-record';
+import KadDHT from 'libp2p-kad-dht';
+import Bootstrap from 'libp2p-bootstrap';
+import { Noise as NOISE } from 'libp2p-noise';
+import MPLEX from 'libp2p-mplex/src/mplex';
+import TCP from 'libp2p-tcp';
+import { sha256 } from 'multiformats/hashes/sha2';
+import PeerId from 'peer-id';
+import { InMemoryRateLimiter } from 'rolling-rate-limiter';
+import toobusy from 'toobusy-js';
+import {
+    NETWORK_MESSAGE_TYPES,
+    NETWORK_API_RATE_LIMIT,
+    NETWORK_API_SPAM_DETECTION,
+    NETWORK_API_BLACK_LIST_TIME_WINDOW_MINUTES,
+    MAX_OPEN_SESSIONS,
+} from '../../../constants/constants.js';
 
 const initializationObject = {
     addresses: {
@@ -93,13 +99,13 @@ class Libp2pService {
 
     _initializeRateLimiters() {
         const basicRateLimiter = new InMemoryRateLimiter({
-            interval: constants.NETWORK_API_RATE_LIMIT.TIME_WINDOW_MILLS,
-            maxInInterval: constants.NETWORK_API_RATE_LIMIT.MAX_NUMBER,
+            interval: NETWORK_API_RATE_LIMIT.TIME_WINDOW_MILLS,
+            maxInInterval: NETWORK_API_RATE_LIMIT.MAX_NUMBER,
         });
 
         const spamDetection = new InMemoryRateLimiter({
-            interval: constants.NETWORK_API_SPAM_DETECTION.TIME_WINDOW_MILLS,
-            maxInInterval: constants.NETWORK_API_SPAM_DETECTION.MAX_NUMBER,
+            interval: NETWORK_API_SPAM_DETECTION.TIME_WINDOW_MILLS,
+            maxInInterval: NETWORK_API_SPAM_DETECTION.MAX_NUMBER,
         });
 
         this.rateLimiter = {
@@ -174,7 +180,7 @@ class Libp2pService {
                 const response = {
                     header: {
                         sessionId: message.header.sessionId,
-                        messageType: constants.NETWORK_MESSAGE_TYPES.RESPONSES.NACK,
+                        messageType: NETWORK_MESSAGE_TYPES.RESPONSES.NACK,
                     },
                     data: {},
                 };
@@ -183,7 +189,7 @@ class Libp2pService {
                 const response = {
                     header: {
                         sessionId: message.header.sessionId,
-                        messageType: constants.NETWORK_MESSAGE_TYPES.RESPONSES.BUSY,
+                        messageType: NETWORK_MESSAGE_TYPES.RESPONSES.BUSY,
                     },
                     data: {},
                 };
@@ -243,9 +249,9 @@ class Libp2pService {
 
     updateReceiverSession(header) {
         // if BUSY we expect same request, so don't update session
-        if (header.messageType === constants.NETWORK_MESSAGE_TYPES.RESPONSES.BUSY) return;
+        if (header.messageType === NETWORK_MESSAGE_TYPES.RESPONSES.BUSY) return;
         // if NACK we don't expect other requests, so delete session
-        if (header.messageType === constants.NETWORK_MESSAGE_TYPES.RESPONSES.NACK) {
+        if (header.messageType === NETWORK_MESSAGE_TYPES.RESPONSES.NACK) {
             if (header.sessionId) delete this.sessions.receiver[header.sessionId];
             return;
         }
@@ -253,12 +259,12 @@ class Libp2pService {
         // if session is new, initialise array of expected message types
         if (!this.sessions.receiver[header.sessionId].expectedMessageTypes) {
             this.sessions.receiver[header.sessionId].expectedMessageTypes = Object.keys(
-                constants.NETWORK_MESSAGE_TYPES.REQUESTS,
+                NETWORK_MESSAGE_TYPES.REQUESTS,
             );
         }
 
         // subroutine completed
-        if (header.messageType === constants.NETWORK_MESSAGE_TYPES.RESPONSES.ACK) {
+        if (header.messageType === NETWORK_MESSAGE_TYPES.RESPONSES.ACK) {
             // protocol operation completed, delete session
             if (this.sessions.receiver[header.sessionId].expectedMessageTypes.length <= 1) {
                 this.removeSession(header.sessionId);
@@ -320,7 +326,7 @@ class Libp2pService {
 
         // business check if PROTOCOL_INIT message
         if (
-            message.header.messageType === constants.NETWORK_MESSAGE_TYPES.REQUESTS.PROTOCOL_INIT &&
+            message.header.messageType === NETWORK_MESSAGE_TYPES.REQUESTS.PROTOCOL_INIT &&
             this.isBusy()
         ) {
             return { message, valid: true, busy: true };
@@ -343,14 +349,14 @@ class Libp2pService {
         if (
             !header.sessionId ||
             !header.messageType ||
-            !Object.keys(constants.NETWORK_MESSAGE_TYPES.REQUESTS).includes(header.messageType)
+            !Object.keys(NETWORK_MESSAGE_TYPES.REQUESTS).includes(header.messageType)
         )
             return false;
 
         // get existing expected messageType or PROTOCOL_INIT if session doesn't exist yet
         const expectedMessageType = this.sessions.receiver[header.sessionId]
             ? this.sessions.receiver[header.sessionId].expectedMessageTypes[0]
-            : Object.keys(constants.NETWORK_MESSAGE_TYPES.REQUESTS)[0];
+            : Object.keys(NETWORK_MESSAGE_TYPES.REQUESTS)[0];
 
         if (expectedMessageType !== header.messageType) return false;
 
@@ -362,7 +368,7 @@ class Libp2pService {
             header.sessionId &&
             header.messageType &&
             this.sessions.sender[header.sessionId] &&
-            Object.keys(constants.NETWORK_MESSAGE_TYPES.RESPONSES).includes(header.messageType)
+            Object.keys(NETWORK_MESSAGE_TYPES.RESPONSES).includes(header.messageType)
         );
     }
 
@@ -386,7 +392,7 @@ class Libp2pService {
 
         if (this.blackList[remotePeerId]) {
             const remainingMinutes = Math.floor(
-                constants.NETWORK_API_BLACK_LIST_TIME_WINDOW_MINUTES -
+                NETWORK_API_BLACK_LIST_TIME_WINDOW_MINUTES -
                     (Date.now() - this.blackList[remotePeerId]) / (1000 * 60),
             );
 
@@ -404,7 +410,7 @@ class Libp2pService {
         if (await this.rateLimiter.spamDetection.limit(remotePeerId)) {
             this.blackList[remotePeerId] = Date.now();
             this.logger.debug(
-                `Blocking request from ${remotePeerId}. Spammer detected and blacklisted for ${constants.NETWORK_API_BLACK_LIST_TIME_WINDOW_MINUTES} minutes.`,
+                `Blocking request from ${remotePeerId}. Spammer detected and blacklisted for ${NETWORK_API_BLACK_LIST_TIME_WINDOW_MINUTES} minutes.`,
             );
 
             return true;
@@ -420,9 +426,7 @@ class Libp2pService {
     }
 
     isBusy() {
-        return (
-            toobusy() || Object.keys(this.sessions.receiver).length > constants.MAX_OPEN_SESSIONS
-        );
+        return toobusy() || Object.keys(this.sessions.receiver).length > MAX_OPEN_SESSIONS;
     }
 
     getPrivateKey() {
@@ -434,4 +438,4 @@ class Libp2pService {
     }
 }
 
-module.exports = Libp2pService;
+export default Libp2pService;

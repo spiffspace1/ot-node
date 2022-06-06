@@ -1,5 +1,5 @@
-const Command = require('../command');
-const constants = require('../../constants');
+import Command from '../command.js';
+import { ERROR_TYPE } from '../../constants.js';
 
 class StoreInitCommand extends Command {
     constructor(ctx) {
@@ -33,7 +33,7 @@ class StoreInitCommand extends Command {
         this.logger.error({
             msg,
             Operation_name: 'Error',
-            Event_name: constants.ERROR_TYPE.REMOVE_SESSION_ERROR,
+            Event_name: ERROR_TYPE.REMOVE_SESSION_ERROR,
             Event_value1: error.message,
             Id_operation: handlerId,
         });
@@ -55,4 +55,4 @@ class StoreInitCommand extends Command {
     }
 }
 
-module.exports = StoreInitCommand;
+export default StoreInitCommand;

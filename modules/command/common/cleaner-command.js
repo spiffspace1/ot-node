@@ -1,6 +1,6 @@
-const Command = require('../command');
-const Models = require('../../../models/index');
-const constants = require('../../constants');
+import Command from '../command.js'
+import constants from '../../constants.js'
+import Models from '../../../models/index.js'
 
 /**
  * Removes commands that have status: completed, failed, expired
@@ -38,4 +38,4 @@ class CleanerCommand extends Command {
     }
 }
 
-module.exports = CleanerCommand;
+export default CleanerCommand;

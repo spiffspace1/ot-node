@@ -4,4 +4,4 @@ class ResultController {
     }
 }
 
-module.exports = ResultController;
+export default ResultController;

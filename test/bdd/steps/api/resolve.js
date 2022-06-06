@@ -1,7 +1,7 @@
-const { When, Then, Given } = require('@cucumber/cucumber');
-const { expect, assert } = require('chai');
-const sleep = require('sleep-async')().Promise;
-const sortedStringify = require('json-stable-stringify');
+import sortedStringify from 'json-stable-stringify';
+import { expect, assert } from 'chai';
+import { When, Given } from '@cucumber/cucumber';
+import { setTimeout } from 'timers/promises';
 
 When(/^I call resolve on node (\d+) for last published assertion/, { timeout: 120000 }, async function (node) {
     this.logger.log('I call resolve route successfully');
@@ -43,7 +43,7 @@ Given('I wait for last resolve to finalize', { timeout: 120000 }, async function
         } else {
             retryCount += 1;
             // eslint-disable-next-line no-await-in-loop
-            await sleep.sleep(5000);
+            await setTimeout(5000);
         }
     }
 });

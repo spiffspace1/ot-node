@@ -1,7 +1,7 @@
-const { Model } = require('sequelize');
-const uuid = require('uuid');
+import { Model } from 'sequelize';
+import { v4 as uuidv4 } from 'uuid';
 
-module.exports = (sequelize, DataTypes) => {
+export default (sequelize, DataTypes) => {
     class jobs extends Model {
         static associate(models) {
             jobs._models = models;
@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
         id: {
             type: DataTypes.UUID,
             primaryKey: true,
-            defaultValue: () => uuid.v4(),
+            defaultValue: () => uuidv4(),
         },
         publisher: DataTypes.STRING,
         assertion_hash: DataTypes.STRING,

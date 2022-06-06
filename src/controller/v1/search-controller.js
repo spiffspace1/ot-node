@@ -16,4 +16,4 @@ class SearchController {
     }
 }
 
-module.exports = SearchController;
+export default SearchController;

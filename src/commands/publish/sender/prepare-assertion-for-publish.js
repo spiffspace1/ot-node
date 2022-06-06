@@ -1,6 +1,6 @@
-const Command = require('../../command');
-const Models = require('../../../../models');
-const { ERROR_TYPE, PUBLISH_METHOD } = require('../../../constants/constants');
+import Command from '../../command.js'
+import Models from '../../../../models/index.js'
+import { ERROR_TYPE, PUBLISH_METHOD } from '../../../constants/constants.js';
 
 class PrepareAssertionForPublish extends Command {
     constructor(ctx) {
@@ -168,4 +168,4 @@ class PrepareAssertionForPublish extends Command {
     }
 }
 
-module.exports = PrepareAssertionForPublish;
+export default PrepareAssertionForPublish;

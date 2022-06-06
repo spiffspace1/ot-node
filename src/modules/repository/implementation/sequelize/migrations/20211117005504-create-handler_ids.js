@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     up: (queryInterface, Sequelize) => queryInterface.createTable('handler_ids', {
         handler_id: {
             allowNull: false,

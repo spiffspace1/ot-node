@@ -1,7 +1,7 @@
-const path = require('path');
-const { MAX_FILE_SIZE, PUBLISH_METHOD } = require('../../../modules/constants');
-const Utilities = require('../../../modules/utilities');
-const BaseController = require('./base-controller');
+import { extname } from 'path';
+import { MAX_FILE_SIZE, PUBLISH_METHOD } from '../../../modules/constants.js';
+import { isArrayOfStrings } from '../../../modules/utilities.js';
+import BaseController from './base-controller.js';
 
 const PublishAllowedVisibilityParams = ['public', 'private'];
 
@@ -147,7 +147,7 @@ class PublishController extends BaseController {
             validateFiles &&
             (!req.files ||
                 !req.files.file ||
-                path.extname(req.files.file.name).toLowerCase() !== '.json') &&
+                extname(req.files.file.name).toLowerCase() !== '.json') &&
             !req.body.data
         ) {
             return {
@@ -179,11 +179,7 @@ class PublishController extends BaseController {
             };
         }
 
-        if (
-            validateKeywords &&
-            req.body.keywords &&
-            !Utilities.isArrayOfStrings(req.body.keywords)
-        ) {
+        if (validateKeywords && req.body.keywords && !isArrayOfStrings(req.body.keywords)) {
             return {
                 isValid: false,
                 code: 400,
@@ -220,16 +216,16 @@ class PublishController extends BaseController {
     async handleNetworkStoreRequest(message, remotePeerId) {
         const operationId = await this.generateHandlerId();
         let commandName;
-        const commandData = { message, remotePeerId, operationId}
-        switch(message.header.messageType) {
-            case 'PROTOCOL_INIT': 
-                commandName = 'handleStoreInitCommand'
+        const commandData = { message, remotePeerId, operationId };
+        switch (message.header.messageType) {
+            case 'PROTOCOL_INIT':
+                commandName = 'handleStoreInitCommand';
                 break;
             case 'PROTOCOL_REQUEST':
-                commandName = 'handleStoreRequestCommand'
+                commandName = 'handleStoreRequestCommand';
                 break;
             default:
-                throw Error("unknown messageType")
+                throw Error('unknown messageType');
         }
 
         await this.commandExecutor.add({
@@ -242,4 +238,4 @@ class PublishController extends BaseController {
     }
 }
 
-module.exports = PublishController;
+export default PublishController;

@@ -1,5 +1,5 @@
-const Engine = require('@comunica/query-sparql').QueryEngine;
-const constants = require('../modules/constants');
+import {QueryEngine as Engine} from '@comunica/query-sparql';
+import {DID_PREFIX} from '../modules/constants.js';
 
 class SparqlqueryService {
     constructor(config) {
@@ -65,7 +65,7 @@ class SparqlqueryService {
         const query = `PREFIX schema: <http://schema.org/>
                         CONSTRUCT { ?s ?p ?o }
                         WHERE {
-                          GRAPH <${constants.DID_PREFIX}:${escapedUri}> {
+                          GRAPH <${DID_PREFIX}:${escapedUri}> {
                             ?s ?p ?o
                           }
                         }`;
@@ -95,7 +95,7 @@ class SparqlqueryService {
                             }
                        }`;
         let graph = await this.execute(query);
-        graph = graph.map((x) => x.g.replace(`${constants.DID_PREFIX}:`, ''));
+        graph = graph.map((x) => x.g.replace(`${DID_PREFIX}:`, ''));
         if (graph.length && graph[0] === 'http://www.bigdata.com/rdf#nullGraph') {
             return [];
         }
@@ -252,4 +252,4 @@ class SparqlqueryService {
     }
 }
 
-module.exports = SparqlqueryService;
+export default SparqlqueryService;

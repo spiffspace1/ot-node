@@ -1,4 +1,4 @@
-const express = require('express');
+import express from "express";
 
 class ExpressHttpClient {
     async initialize() {
@@ -19,4 +19,4 @@ class ExpressHttpClient {
     }
 }
 
-module.exports = ExpressHttpClient;
+export default ExpressHttpClient;

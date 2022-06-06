@@ -1,9 +1,11 @@
-/* eslint-disable max-len */
-const Ganache = require('ganache');
-const Web3 = require('web3');
-const fs = require('fs');
-const path = require('path');
-const Wallet = require('ethereumjs-wallet').default;
+import Web3 from 'web3';
+import Ganache from 'ganache';
+import fs from 'fs';
+import Wallet from 'ethereumjs-wallet';
+import { fileURLToPath } from 'url'
+import { dirname , join } from 'path'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 const tokenContractAddress = '0x470561DB00b4A21A35bD285c3e17e542DCa8B52c';
 
@@ -129,8 +131,8 @@ class LocalBlockchain {
     }
 
     fetchContracts() {
-        const dkgSource = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../../build/contracts/DKGcontract.json')).toString());
-        const uaiRegistrySource = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../../build/contracts/UAIRegistry.json')).toString());
+        const dkgSource = JSON.parse(fs.readFileSync(join(__dirname, '../../../../build/contracts/DKGcontract.json')).toString());
+        const uaiRegistrySource = JSON.parse(fs.readFileSync(join(__dirname, '../../../../build/contracts/UAIRegistry.json')).toString());
 
         this.contracts = {};
 
@@ -212,4 +214,5 @@ class LocalBlockchain {
         return this.web3.eth.getBalance(wallet);
     }
 }
-module.exports = LocalBlockchain;
+
+export default LocalBlockchain;

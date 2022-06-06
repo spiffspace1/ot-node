@@ -1,9 +1,9 @@
-const awilix = require('awilix');
+import { createContainer, InjectionMode, Lifetime, asClass, asValue } from 'awilix'
 
 class DependencyInjection {
     static initialize() {
-        const container = awilix.createContainer({
-            injectionMode: awilix.InjectionMode.PROXY,
+        const container = createContainer({
+            injectionMode: InjectionMode.PROXY,
         });
 
         container.loadModules(
@@ -20,9 +20,10 @@ class DependencyInjection {
             {
                 formatName: 'camelCase',
                 resolverOptions: {
-                    lifetime: awilix.Lifetime.SINGLETON,
-                    register: awilix.asClass,
+                    lifetime: Lifetime.SINGLETON,
+                    register: asClass,
                 },
+                esModules: true,
             },
         );
 
@@ -31,9 +32,9 @@ class DependencyInjection {
 
     static registerValue(container, valueName, value) {
         container.register({
-            [valueName]: awilix.asValue(value),
+            [valueName]: asValue(value),
         });
     }
 }
 
-module.exports = DependencyInjection;
+export default DependencyInjection;

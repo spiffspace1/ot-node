@@ -4,4 +4,4 @@ class InfoController {
     }
 }
 
-module.exports = InfoController;
+export default InfoController;

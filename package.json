@@ -3,6 +3,7 @@
     "version": "6.0.0-beta.1.38",
     "description": "OTNode v6 Beta 1",
     "main": "index.js",
+    "type": "module",
     "scripts": {
         "start": "node index.js",
         "dev": "nodemon index.js",
@@ -58,7 +59,8 @@
     "dependencies": {
         "@comunica/query-sparql": "^2.2.1",
         "app-root-path": "^3.0.0",
-        "awilix": "^5.0.1",
+        "async": "^3.2.3",
+        "awilix": "^7.0.3",
         "axios": "^0.24.0",
         "big-number": "^2.0.0",
         "bl": "^5.0.0",

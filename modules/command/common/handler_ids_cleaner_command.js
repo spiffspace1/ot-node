@@ -1,6 +1,6 @@
-const Command = require('../command');
-const Models = require('../../../models/index');
-const constants = require('../../constants');
+import Command from '../command.js';
+import Models from '../../../models/index.js';
+import { HANDLER_IDS_COMMAND_CLEANUP_TIME_MILLS } from '../../constants.js';
 
 /**
  * Removes handler id entries in database and cached files
@@ -17,30 +17,39 @@ class HandlerIdsCleanerCommand extends Command {
      * @param command
      */
     async execute(command) {
-        const timeToBeDeleted = Date.now() - constants.HANDLER_IDS_COMMAND_CLEANUP_TIME_MILLS;
-        Models.handler_ids.findAll({
-            where: {
-                timestamp: { [Models.Sequelize.Op.lt]: timeToBeDeleted },
-                status: { [Models.Sequelize.Op.in]: ['COMPLETED', 'FAILED'] },
-            },
-        }).then((handlersToBeDeleted) => {
-            handlersToBeDeleted.forEach((handler) => {
-                const handlerId = handler.handler_id;
-                Models.handler_ids.destroy({
-                    where: {
-                        handler_id: handlerId,
-                    },
-                }).catch((error) => {
-                    this.logger.warn(`Failed to clean handler ids table: error: ${error.message}`);
+        const timeToBeDeleted = Date.now() - HANDLER_IDS_COMMAND_CLEANUP_TIME_MILLS;
+        Models.handler_ids
+            .findAll({
+                where: {
+                    timestamp: { [Models.Sequelize.Op.lt]: timeToBeDeleted },
+                    status: { [Models.Sequelize.Op.in]: ['COMPLETED', 'FAILED'] },
+                },
+            })
+            .then((handlersToBeDeleted) => {
+                handlersToBeDeleted.forEach((handler) => {
+                    const handlerId = handler.handler_id;
+                    Models.handler_ids
+                        .destroy({
+                            where: {
+                                handler_id: handlerId,
+                            },
+                        })
+                        .catch((error) => {
+                            this.logger.warn(
+                                `Failed to clean handler ids table: error: ${error.message}`,
+                            );
+                        });
+                    const filePath = this.fileService.getHandlerIdDocumentPath(handlerId);
+                    this.fileService.removeFile(filePath).catch((error) => {
+                        this.logger.warn(
+                            `Failed to remove handler id cache file: error: ${error.message}`,
+                        );
+                    });
                 });
-                const filePath = this.fileService.getHandlerIdDocumentPath(handlerId);
-                this.fileService.removeFile(filePath).catch((error) => {
-                    this.logger.warn(`Failed to remove handler id cache file: error: ${error.message}`);
-                });
+            })
+            .catch((error) => {
+                this.logger.warn(`Failed to clean handler ids table: error: ${error.message}`);
             });
-        }).catch((error) => {
-            this.logger.warn(`Failed to clean handler ids table: error: ${error.message}`);
-        });
 
         return Command.repeat();
     }
@@ -63,7 +72,7 @@ class HandlerIdsCleanerCommand extends Command {
     default(map) {
         const command = {
             name: 'handlerIdsCleanerCommand',
-            period: constants.HANDLER_IDS_COMMAND_CLEANUP_TIME_MILLS,
+            period: HANDLER_IDS_COMMAND_CLEANUP_TIME_MILLS,
             data: {},
             transactional: false,
         };
@@ -72,4 +81,4 @@ class HandlerIdsCleanerCommand extends Command {
     }
 }
 
-module.exports = HandlerIdsCleanerCommand;
+export default HandlerIdsCleanerCommand;

@@ -1,4 +1,4 @@
-const watchdog = require('watchdog');
+import { Watchdog } from "watchdog";
 
 class WatchdogService {
     constructor(ctx) {
@@ -12,7 +12,7 @@ class WatchdogService {
 
     initialize() {
         this.food = { data: { initialFeed: true, msg: 'Watchdog started!' }, timeout: 2 * 60 * 1000 };
-        this.dog = new watchdog.Watchdog();
+        this.dog = new Watchdog();
 
         this.dog.on('reset', async () => {
             const aliveServices = {};
@@ -44,4 +44,4 @@ class WatchdogService {
     }
 }
 
-module.exports = WatchdogService;
+export default WatchdogService;

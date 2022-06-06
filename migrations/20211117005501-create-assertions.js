@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     up: async (queryInterface, Sequelize) => {
         await queryInterface.createTable('assertions', {
             hash: {

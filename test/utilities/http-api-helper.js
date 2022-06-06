@@ -1,4 +1,4 @@
-const request = require('request');
+import request from "request";
 
 class HttpApiHelper {
     info(nodeRpcUrl) {
@@ -18,4 +18,4 @@ class HttpApiHelper {
     }
 }
 
-module.exports = HttpApiHelper;
+export default HttpApiHelper;

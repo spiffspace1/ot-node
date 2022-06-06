@@ -1,3 +1,3 @@
 class ProtocolSingleton {}
 
-module.exports = ProtocolSingleton;
+export default ProtocolSingleton;

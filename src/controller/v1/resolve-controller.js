@@ -4,4 +4,4 @@ class ResolveController {
     }
 }
 
-module.exports = ResolveController;
+export default ResolveController;

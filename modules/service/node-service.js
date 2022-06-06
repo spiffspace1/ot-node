@@ -10,4 +10,4 @@ class NodeService {
     }
 }
 
-module.exports = NodeService;
+export default NodeService;

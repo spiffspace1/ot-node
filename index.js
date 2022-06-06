@@ -1,10 +1,11 @@
-require('dotenv').config();
-const fs = require('fs-extra');
-const path = require('path');
-const appRootPath = require('app-root-path');
-const { execSync } = require('child_process');
-const semver = require('semver');
-const OTNode = require('./ot-node');
+import 'dotenv/config';
+
+import { join } from 'path';
+import appRootPath from 'app-root-path';
+import fs from 'fs-extra';
+import { execSync } from 'child_process';
+import semver from 'semver';
+import OTNode from './ot-node.js';
 
 process.env.NODE_ENV =
     process.env.NODE_ENV && ['development', 'testnet', 'mainnet'].indexOf(process.env.NODE_ENV) >= 0
@@ -30,7 +31,7 @@ process.env.NODE_ENV =
         console.error(`Error occurred while start ot-node, error message: ${e}. ${e.stack}`);
         console.error(`Trying to recover from older version`);
 
-        const rootPath = path.join(appRootPath.path, '..');
+        const rootPath = join(appRootPath.path, '..');
         const oldVersionsDirs = (await fs.promises.readdir(rootPath, { withFileTypes: true }))
             .filter((dirent) => dirent.isDirectory())
             .map((dirent) => dirent.name)
@@ -44,7 +45,7 @@ process.env.NODE_ENV =
         }
 
         const oldVersion = oldVersionsDirs.sort(semver.compare).pop();
-        const oldversionPath = path.join(rootPath, oldVersion);
+        const oldversionPath = join(rootPath, oldVersion);
         execSync(`ln -sfn ${oldversionPath} ${rootPath}/current`);
         await fs.promises.rm(appRootPath.path, { force: true, recursive: true });
         process.exit(1);

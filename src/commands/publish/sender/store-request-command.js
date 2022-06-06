@@ -1,6 +1,10 @@
-const Command = require('../../command');
-const Models = require('../../../../models/index');
-const constants = require('../../../constants/constants');
+import Command from '../../command.js'
+import {
+    ERROR_TYPE,
+    NETWORK_MESSAGE_TYPES,
+    NETWORK_PROTOCOLS,
+} from '../../../constants/constants.js'
+import Models from '../../../../models/index.js'
 
 class SendAssertionCommand extends Command {
     constructor(ctx) {
@@ -24,7 +28,7 @@ class SendAssertionCommand extends Command {
         const messages = sessionIds.map((sessionId) => ({
             header: {
                 sessionId,
-                messageType: constants.NETWORK_MESSAGE_TYPES.REQUESTS.PROTOCOL_REQUEST,
+                messageType: NETWORK_MESSAGE_TYPES.REQUESTS.PROTOCOL_REQUEST,
             },
             data: { id: assertion.id, nquads },
         }));
@@ -33,13 +37,13 @@ class SendAssertionCommand extends Command {
         const sendMessagePromises = nodes.map(async (node, index) => {
             try {
                 const response = await this.networkModuleManager.sendMessage(
-                    constants.NETWORK_PROTOCOLS.STORE,
+                    NETWORK_PROTOCOLS.STORE,
                     node,
                     messages[index],
                 );
                 if (
                     !response ||
-                    response.header.messageType !== constants.NETWORK_MESSAGE_TYPES.RESPONSES.ACK
+                    response.header.messageType !== NETWORK_MESSAGE_TYPES.RESPONSES.ACK
                 )
                     failedResponses += 1;
             } catch (e) {
@@ -97,7 +101,7 @@ class SendAssertionCommand extends Command {
         this.logger.error({
             msg,
             Operation_name: 'Error',
-            Event_name: constants.ERROR_TYPE.STORE_REQUEST_ERROR,
+            Event_name: ERROR_TYPE.STORE_REQUEST_ERROR,
             Event_value1: error.message,
             Id_operation: handlerId,
         });
@@ -119,4 +123,4 @@ class SendAssertionCommand extends Command {
     }
 }
 
-module.exports = SendAssertionCommand;
+export default SendAssertionCommand;

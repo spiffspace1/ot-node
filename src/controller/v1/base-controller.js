@@ -1,6 +1,6 @@
-const { v1: uuidv1 } = require('uuid');
-const Models = require('../../../models');
-const { HANDLER_ID_STATUS } = require('../../../modules/constants');
+import { v4 as uuidv4 } from 'uuid';
+import Models from '../../../models/index.js'
+import { HANDLER_ID_STATUS } from '../../../modules/constants.js';
 
 class BaseController {
     generateHandlerId() {
@@ -30,8 +30,8 @@ class BaseController {
     }
 
     generateOperationId() {
-        return uuidv1();
+        return uuidv4();
     }
 }
 
-module.exports = BaseController;
+export default BaseController;

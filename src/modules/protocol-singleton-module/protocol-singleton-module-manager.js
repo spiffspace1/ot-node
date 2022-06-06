@@ -1,6 +1,6 @@
-const BaseModuleManager = require('../base-module-manager');
+import BaseModuleManager from "../base-module-manager.js";
 
 class ProtocolSingletonModuleManager extends BaseModuleManager {
 }
 
-module.exports = ProtocolSingletonModuleManager;
+export default ProtocolSingletonModuleManager;

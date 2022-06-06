@@ -1,7 +1,6 @@
-const appRootPath = require('app-root-path');
-const path = require('path');
-const fs = require('fs-extra');
-const FileService = require('../service/file-service');
+import path from 'path';
+import fs from 'fs-extra';
+import FileService from '../service/file-service.js';
 
 class BaseMigration {
     constructor(migrationName, logger, config) {
@@ -41,7 +40,7 @@ class BaseMigration {
         const migrationFolderPath = migrationPath || this.fileService.getMigrationFolderPath();
         await fs.ensureDir(migrationFolderPath);
         const migrationFilePath = path.join(migrationFolderPath, this.migrationName);
-        await fs.writeFile(migrationFilePath, 'MIGRATED');
+        await fs.promises.writeFile(migrationFilePath, 'MIGRATED');
         this.logger.info(
             `${this.migrationName} migration completed. Lasted: ${
                 Date.now() - this.startedTimestamp
@@ -50,4 +49,4 @@ class BaseMigration {
     }
 }
 
-module.exports = BaseMigration;
+export default BaseMigration;

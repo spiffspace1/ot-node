@@ -1,12 +1,15 @@
-require('dotenv').config();
+import 'dotenv/config';
 
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
-const mysql = require('mysql2');
+import { readdirSync, readFileSync } from 'fs';
+import { createConnection } from 'mysql2';
+import { Sequelize } from 'sequelize';
+import { fileURLToPath } from 'url'
+import { dirname , join, basename } from 'path'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
-const basename = path.basename(__filename);
-const config = require(`${__dirname}/../config/sequelizeConfig`);
+const config = JSON.parse(readFileSync(`${__dirname}/../config/sequelizeConfig`));
+const basename = basename(__filename);
 const db = {};
 let sequelize = {};
 const OPERATIONAL_DB_NAME = process.env.OPERATIONAL_DB_NAME || 'operationaldb';
@@ -15,7 +18,7 @@ const OPERATIONAL_DB_PASSWORD = process.env.OPERATIONAL_DB_PASSWORD || '';
 config.database = OPERATIONAL_DB_NAME;
 config.password = OPERATIONAL_DB_PASSWORD;
 
-const connection = mysql.createConnection({
+const connection = createConnection({
     host: config.host,
     port: config.port,
     user: config.username,
@@ -29,11 +32,13 @@ if (config.use_env_variable) {
     sequelize = new Sequelize(config.database, config.username, config.password, config);
 }
 
-fs
-    .readdirSync(__dirname)
-    .filter((file) => (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js'))
+readdirSync(__dirname)
+    .filter((file) => file.indexOf('.') !== 0 && file !== basename && file.slice(-3) === '.js')
     .forEach((file) => {
-        const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
+        const model = JSON.parse(readFileSync(join(__dirname, file)))(
+            sequelize,
+            Sequelize.DataTypes,
+        );
         db[model.name] = model;
     });
 
@@ -46,4 +51,4 @@ Object.keys(db).forEach((modelName) => {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
-module.exports = db;
+export default db;

@@ -1,4 +1,4 @@
-const { sha256 } = require('multiformats/hashes/sha2');
+import { sha256 } from 'multiformats/hashes/sha2';
 
 class KadIdentityRanking {
     initialize(logger) {
@@ -39,4 +39,4 @@ class KadIdentityRanking {
     }
 }
 
-module.exports = KadIdentityRanking;
+export default KadIdentityRanking;

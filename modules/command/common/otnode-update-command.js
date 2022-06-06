@@ -1,7 +1,7 @@
-const semver = require('semver');
-const fs = require('fs-extra');
-const Command = require('../command');
-const constants = require('../../constants');
+import fs from 'fs-extra';
+import semver from 'semver';
+import Command from '../command.js';
+import { ERROR_TYPE } from '../../constants.js';
 
 class OtnodeUpdateCommand extends Command {
     constructor(ctx) {
@@ -64,7 +64,7 @@ class OtnodeUpdateCommand extends Command {
     async handleError(error) {
         this.logger.error({
             msg: `Error in update command: ${error}. ${error.stack}`,
-            Event_name: constants.ERROR_TYPE.CHECKING_UPDATE_ERROR,
+            Event_name: ERROR_TYPE.CHECKING_UPDATE_ERROR,
             Event_value1: error.message,
         });
     }
@@ -89,4 +89,4 @@ class OtnodeUpdateCommand extends Command {
     }
 }
 
-module.exports = OtnodeUpdateCommand;
+export default OtnodeUpdateCommand;

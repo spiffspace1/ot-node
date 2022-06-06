@@ -1,8 +1,11 @@
-const { When, Then, Given } = require('@cucumber/cucumber');
-const { expect, assert } = require('chai');
-const sleep = require('sleep-async')().Promise;
-const assertions = require('./datasets/assertions.json');
-const utilities = require('../../../utilities/utilities');
+import { setTimeout } from 'timers/promises';
+import { readFileSync } from 'fs';
+import { expect, assert } from 'chai';
+import { When, Given } from '@cucumber/cucumber';
+import Utilities from '../../../utilities/utilities.js';
+
+const assertions = JSON.parse(readFileSync('./datasets/assertions.json'));
+
 
 When(
     /^I call publish on node (\d+) with ([^"]*) with keywords:*$/,
@@ -14,7 +17,7 @@ When(
             `Assertion with name: ${assertionName} not found!`,
         ).to.be.equal(true);
 
-        const parsedKeywords = utilities.unpackRawTableToArray(keywords);
+        const parsedKeywords = Utilities.unpackRawTableToArray(keywords);
         const assertion = assertions[assertionName];
         const result = await this.state.nodes[node - 1].client
             .publish(assertion, parsedKeywords)
@@ -62,7 +65,7 @@ Given('I wait for last publish to finalize', { timeout: 120000 }, async function
         } else {
             retryCount += 1;
             // eslint-disable-next-line no-await-in-loop
-            await sleep.sleep(5000);
+            await setTimeout(5000);
         }
     }
 });

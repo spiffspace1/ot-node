@@ -1,9 +1,11 @@
-const { ServerClientConfig, GraphDBServerClient } = require('graphdb').server;
-const { RepositoryConfig, RepositoryType } = require('graphdb').repository;
-const { RDFMimeType } = require('graphdb').http;
-const axios = require('axios');
-const { execSync } = require('child_process');
-const SparqlqueryService = require('./sparqlquery-service');
+import axios from 'axios';
+import { execSync } from 'child_process';
+import RDFMimeType from 'graphdb/lib/http/rdf-mime-type';
+import RepositoryConfig from 'graphdb/lib/repository/repository-config'
+import RepositoryType from 'graphdb/lib/repository/repository-type';
+import ServerClientConfig from 'graphdb/lib/server/server-client-config'
+import GraphDBServerClient from 'graphdb/lib/server/graphdb-server-client'
+import SparqlqueryService from './sparqlquery-service.js';
 
 class GraphdbService extends SparqlqueryService {
     constructor(config) {
@@ -81,4 +83,4 @@ class GraphdbService extends SparqlqueryService {
     }
 }
 
-module.exports = GraphdbService;
+export default GraphdbService;
