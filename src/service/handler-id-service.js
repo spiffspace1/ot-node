@@ -8,6 +8,8 @@ class HandlerIdService {
         this.repositoryModuleManager = ctx.repositoryModuleManager;
 
         this.memoryCachedHandlersData = {};
+
+        this.scoketClientModuleManager = ctx.scoketClientModuleManager;
     }
 
     async generateHandlerId() {
@@ -41,6 +43,8 @@ class HandlerIdService {
     }
 
     async updateHandlerIdStatus(handlerId, status) {
+        EventEmitter.emit('PORUKA', {});
+
         await this.repositoryModuleManager.updateHandlerIdRecord(
             {
                 status,

@@ -26,6 +26,20 @@
                     }
                 }
             },
+            "socketClient": {
+                "enabled": true,
+                "implementation": {
+                    "steva-socket": {
+                        "package": "./socket-client/implementation/steva-socket",
+                        "config": {
+                            "useSsl": false,
+                            "port": 8900,
+                            "sslKeyPath": "/root/certs/privkey.pem",
+                            "sslCertificatePath": "/root/certs/fullchain.pem"
+                        }
+                    }
+                }
+            },
             "network": {
                 "enabled": true,
                 "implementation": {
