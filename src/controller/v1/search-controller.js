@@ -15,11 +15,6 @@ class SearchController extends BaseController {
 
         const handlerId = await this.handlerIdService.generateHandlerId();
 
-        await this.handlerIdService.updateHandlerIdStatus(
-            handlerId,
-            HANDLER_ID_STATUS.SEARCH_ASSERTIONS.VALIDATING_QUERY,
-        );
-
         this.returnResponse(res, 202, {
             handlerId,
         });

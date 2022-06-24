@@ -42,7 +42,7 @@ startNode() {
   echo Starting node $1
   osascript -e "tell app \"Terminal\"
       do script \"cd $pathToOtNode
-  node index.js ./tools/local-network-setup/.$1_origintrail_noderc\"
+  nvm use 16.14.1 && node index.js ./tools/local-network-setup/.$1_origintrail_noderc\"
   end tell"
 }
 

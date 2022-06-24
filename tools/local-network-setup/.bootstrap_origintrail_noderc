@@ -59,8 +59,8 @@
               "https://rpc-mumbai.matic.today",
               "https://matic-testnet-archive-rpc.bwarelabs.com"
             ],
-            "publicKey": "0xd08eCEFb11C5e767fA196E2010B736155272537e",
-            "privateKey": "8db5ecd44052100b03c8d5fd0221390ea0145868a58971a70e456c90697135ee"
+            "publicKey": "0xBD084aB97C704FE4a6D620CB7c30C0BE0366646f",
+            "privateKey": "0x61b1b921f6d57d7f60c4ac17d5bd51f8394c5d72b8d4db177b5d419fbc5c7a41"
           }
         }
       }

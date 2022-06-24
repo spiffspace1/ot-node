@@ -19,6 +19,7 @@ class HandleSearchAssertionsRequestCommand extends Command {
 
         const { message, remotePeerId, handlerId } = command.data;
 
+        // TODO: Extract in separate command
         const localQuery = true;
         const data = await this.tripleStoreModuleManager.findAssertionsByKeyword(
             message.data.query,

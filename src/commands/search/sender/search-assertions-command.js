@@ -1,4 +1,5 @@
 const Command = require('../../command');
+const {HANDLER_ID_STATUS} = require("../../../constants/constants");
 
 class SearchAssertionsCommand extends Command {
     constructor(ctx) {
@@ -13,6 +14,11 @@ class SearchAssertionsCommand extends Command {
      */
     async execute(command) {
         const { nodes, handlerId, query, options } = command.data;
+
+        await this.handlerIdService.updateHandlerIdStatus(
+            handlerId,
+            HANDLER_ID_STATUS.SEARCH_ASSERTIONS.SEARCHING_ASSERTIONS_ON_DKG,
+        );
 
         const commandSequence = ['searchAssertionsInitCommand', 'searchAssertionsRequestCommand'];
         const addCommandPromise = [];

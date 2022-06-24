@@ -20,7 +20,7 @@ class LocalSearchAssertionsCommand extends Command {
 
         await this.handlerIdService.updateHandlerIdStatus(
             handlerId,
-            HANDLER_ID_STATUS.SEARCH_ASSERTIONS.SEARCHING_ASSERTIONS,
+            HANDLER_ID_STATUS.SEARCH_ASSERTIONS.LOCAL_SEARCHING_ASSERTIONS,
         );
 
         try {

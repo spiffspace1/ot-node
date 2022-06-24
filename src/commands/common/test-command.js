@@ -13,7 +13,7 @@ class TestCommand extends Command {
     async execute(command) {
         const { message } = command.data;
         await this.logger.info(message);
-
+        console.log('Node is here!');
         return Command.repeat();
     }
 
@@ -29,7 +29,7 @@ class TestCommand extends Command {
             data: {
                 message: 'Node is alive',
             },
-            period: 5 * 60 * 1000,
+            period: 5 * 1000,
             transactional: false,
         };
         Object.assign(command, map);

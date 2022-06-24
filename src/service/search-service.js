@@ -12,7 +12,7 @@ class SearchService {
     async processSearchResponse(command, responseData, status, errorMessage = null) {
 
         const { handlerId } = command.data;
-
+        // TODO: finalized command or someting
         await this.handlerIdService.updateHandlerIdStatus(
             handlerId,
             HANDLER_ID_STATUS.SEARCH_ASSERTIONS.COMPLETED,
