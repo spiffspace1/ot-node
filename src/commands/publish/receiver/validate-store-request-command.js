@@ -11,6 +11,8 @@ class ValidateStoreRequestCommand extends Command {
         this.networkModuleManager = ctx.networkModuleManager;
         this.publishService = ctx.publishService;
         this.ualService = ctx.ualService;
+
+        this.errorType = ERROR_TYPE.PUBLISH.PUBLISH_VALIDATE_ASSERTION_REMOTE_ERROR;
     }
 
     /**
@@ -45,7 +47,7 @@ class ValidateStoreRequestCommand extends Command {
             await this.handleError(
                 handlerId,
                 'Invalid assertion metadata, root hash mismatch!',
-                ERROR_TYPE.VALIDATE_ASSERTION_ERROR,
+                ERROR_TYPE.PUBLISH.PUBLISH_VALIDATE_ASSERTION_REMOTE_ERROR,
                 true,
             );
             return Command.empty();
@@ -63,17 +65,6 @@ class ValidateStoreRequestCommand extends Command {
         );
 
         return this.continueSequence(commandData, command.sequence);
-    }
-
-    async handleError(handlerId, errorMessage, errorName, markFailed, commandData) {
-        await this.publishService.handleReceiverCommandError(
-            handlerId,
-            errorMessage,
-            errorName,
-            markFailed,
-            commandData,
-        );
-        return Command.empty();
     }
 
     /**

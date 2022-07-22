@@ -24,34 +24,30 @@ class LocalSearchAssertionsCommand extends Command {
         );
 
         try {
-
             const localQuery = true;
             const response = await this.tripleStoreModuleManager.findAssertionsByKeyword(
                 query,
                 options,
-                localQuery
+                localQuery,
             );
 
             const data = {};
             data.assertions = response.map((assertion) => assertion.assertionId);
 
             await this.handlerIdService.cacheHandlerIdData(handlerId, data);
-
         } catch (e) {
-            await this.handlerIdService.updateHandlerIdStatus(handlerId, HANDLER_ID_STATUS.FAILED, e.message);
+            await this.handlerIdService.updateHandlerIdStatus(
+                handlerId,
+                HANDLER_ID_STATUS.FAILED,
+                e.message,
+            );
         }
 
         return this.continueSequence(command.data, command.sequence);
     }
 
     handleError(handlerId, error, msg) {
-        this.logger.error({
-            msg,
-            Operation_name: 'Error',
-            Event_name: ERROR_TYPE.LOCAL_SEARCH_ASSERTIONS_ERROR,
-            Event_value1: error.message,
-            Id_operation: handlerId,
-        });
+        this.logger.error(msg);
     }
 
     /**

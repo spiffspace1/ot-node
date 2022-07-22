@@ -3,6 +3,7 @@ const {
     RESOLVE_REQUEST_STATUS,
     HANDLER_ID_STATUS,
     RESOLVE_STATUS,
+    ERROR_TYPE,
 } = require('../constants/constants');
 
 class ResolveService extends OperationService {
@@ -15,6 +16,7 @@ class ResolveService extends OperationService {
         this.operationName = 'resolve';
         this.operationRequestStatus = RESOLVE_REQUEST_STATUS;
         this.operationStatus = RESOLVE_STATUS;
+        this.operationErrorType = ERROR_TYPE.RESOLVE.RESOLVE_ERROR;
         this.completedStatuses = [
             HANDLER_ID_STATUS.RESOLVE.RESOLVE_FETCH_FROM_NODES_END,
             HANDLER_ID_STATUS.RESOLVE.RESOLVE_END,

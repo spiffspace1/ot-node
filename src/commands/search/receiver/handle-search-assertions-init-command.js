@@ -1,6 +1,6 @@
 const Command = require('../../command');
 const { ERROR_TYPE } = require('../../../constants/constants');
-const constants = require("../../../constants/constants");
+const constants = require('../../../constants/constants');
 
 class HandleSearchAssertionsInitCommand extends Command {
     constructor(ctx) {
@@ -25,20 +25,14 @@ class HandleSearchAssertionsInitCommand extends Command {
             remotePeerId,
             messageType,
             handlerId,
-            messageData
+            messageData,
         );
 
         return this.continueSequence(command.data, command.sequence);
     }
 
     handleError(handlerId, error, msg) {
-        this.logger.error({
-            msg,
-            Operation_name: 'Error',
-            Event_name: ERROR_TYPE.HANDLE_SEARCH_ASSERTIONS_INIT_ERROR,
-            Event_value1: error.message,
-            Id_operation: handlerId,
-        });
+        this.logger.error(msg);
     }
 
     /**

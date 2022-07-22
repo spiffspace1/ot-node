@@ -10,7 +10,7 @@ class ValidateAssertionCommand extends Command {
         this.ualService = ctx.ualService;
         this.handlerIdService = ctx.handlerIdService;
 
-        this.errorType = ERROR_TYPE.VALIDATE_ASSERTION_ERROR;
+        this.errorType = ERROR_TYPE.PUBLISH.PUBLISH_VALIDATE_ASSERTION_ERROR;
     }
 
     /**
@@ -45,7 +45,7 @@ class ValidateAssertionCommand extends Command {
             await this.handleError(
                 handlerId,
                 'Invalid assertion metadata, root hash mismatch!',
-                ERROR_TYPE.VALIDATE_ASSERTION_ERROR,
+                ERROR_TYPE.PUBLISH.PUBLISH_VALIDATE_ASSERTION_ERROR,
                 true,
             );
             return Command.empty();

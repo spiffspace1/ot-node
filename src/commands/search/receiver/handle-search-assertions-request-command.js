@@ -1,6 +1,6 @@
 const Command = require('../../command');
 const { ERROR_TYPE } = require('../../../constants/constants');
-const constants = require("../../../constants/constants");
+const constants = require('../../../constants/constants');
 
 class HandleSearchAssertionsRequestCommand extends Command {
     constructor(ctx) {
@@ -16,14 +16,13 @@ class HandleSearchAssertionsRequestCommand extends Command {
      * @param command
      */
     async execute(command) {
-
         const { message, remotePeerId, handlerId } = command.data;
 
         const localQuery = true;
         const data = await this.tripleStoreModuleManager.findAssertionsByKeyword(
             message.data.query,
             message.data.options,
-            localQuery
+            localQuery,
         );
 
         const messageType = constants.NETWORK_MESSAGE_TYPES.RESPONSES.ACK;
@@ -33,20 +32,14 @@ class HandleSearchAssertionsRequestCommand extends Command {
             remotePeerId,
             messageType,
             handlerId,
-            messageData
+            messageData,
         );
 
         return Command.empty();
     }
 
     handleError(handlerId, error, msg) {
-        this.logger.error({
-            msg,
-            Operation_name: 'Error',
-            Event_name: ERROR_TYPE.HANDLE_SEARCH_ASSERTIONS_REQUEST_ERROR,
-            Event_value1: error.message,
-            Id_operation: handlerId,
-        });
+        this.logger.error(msg);
     }
 
     /**

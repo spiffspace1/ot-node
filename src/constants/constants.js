@@ -226,9 +226,24 @@ exports.SERVICE_API_ROUTES = {
  *  Types of errors supported
  */
 exports.ERROR_TYPE = {
+    PUBLISH: {
+        PUBLISH_START_ERROR: 'PublishStartError',
+        PUBLISH_ROUTE_ERROR: 'PublishRouteError',
+        PUBLISH_VALIDATE_ASSERTION_ERROR: 'PublishValidateAssertionError',
+        PUBLISH_VALIDATE_ASSERTION_REMOTE_ERROR: 'PublishValidateAssertionRemoteError',
+        PUBLISH_LOCAL_STORE_ERROR: 'PublishLocalStoreError',
+        PUBLISH_LOCAL_STORE_REMOTE_ERROR: 'PublishLocalStoreRemoteError',
+        PUBLISH_FIND_NODES_ERROR: 'PublishFindNodesError',
+        PUBLISH_STORE_INIT_ERROR: 'PublishStoreInitError',
+        PUBLISH_STORE_REQUEST_ERROR: 'PublishStoreRequestError',
+        PUBLISH_ERROR: 'PublishError',
+        PUBLISH_REMOTE_ERROR: 'PublishRemoteError',
+    },
+    RESOLVE: {
+        RESOLVE_ERROR: 'ResolveError',
+    },
     INSERT_ASSERTION_ERROR: 'InsertAssertionError',
     PREPARE_ASSERTION_ERROR: 'PrepareAssertionError',
-    VALIDATE_ASSERTION_ERROR: 'ValidateAssertionError',
     SUBMIT_PROOFS_ERROR: 'SubmitProofsError',
     FIND_NODES_ERROR: 'FindNodesError',
     SEND_ASSERTION_ERROR: 'SendAssertionError',
@@ -237,8 +252,6 @@ exports.ERROR_TYPE = {
     CHECKING_UPDATE_ERROR: 'CheckingUpdateError',
     API_ERROR_400: 'ApiError400',
     API_ERROR_500: 'ApiError500',
-    PUBLISH_START_ERROR: 'PublishStartError',
-    PUBLISH_ROUTE_ERROR: 'PublishRouteError',
     RESOLVE_ROUTE_ERROR: 'ResolveRouteError',
     SEARCH_ASSERTIONS_ROUTE_ERROR: 'SearchAssertionsRouteError',
     SEARCH_ASSERTIONS_INIT_ERROR: 'SearchAssertionsInitError',
@@ -256,8 +269,6 @@ exports.ERROR_TYPE = {
     PROOFS_ROUTE_ERROR: 'ProofsRouteError',
     RESULTS_ROUTE_ERROR: 'ResultsRouteError',
     NODE_INFO_ROUTE_ERROR: 'NodeInfoRouteError',
-    STORE_INIT_ERROR: 'StoreInitError',
-    STORE_REQUEST_ERROR: 'StoreRequestError',
     GET_ASSERTION_COMMAND: 'GetAssertionCommand',
     RESOLVE_START_ERROR: 'ResolveStartError',
     RESOLVE_INIT_ERROR: 'ResolveInitError',

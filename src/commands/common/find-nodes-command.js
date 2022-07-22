@@ -9,6 +9,8 @@ class FindNodesCommand extends Command {
         this.networkModuleManager = ctx.networkModuleManager;
         this.handlerIdService = ctx.handlerIdService;
         this.repositoryModuleManager = ctx.repositoryModuleManager;
+
+        this.errorType = ERROR_TYPE.FIND_NODES_ERROR;
     }
 
     /**
@@ -17,7 +19,9 @@ class FindNodesCommand extends Command {
      */
     async execute(command) {
         const { handlerId, networkProtocol } = command.data;
-
+        if (networkProtocol === NETWORK_PROTOCOLS.PUBLISH) {
+            this.errorType = ERROR_TYPE.PUBLISH.PUBLISH_FIND_NODES_ERROR;
+        }
         const keys = this.extractKeys(command.data);
 
         this.logger.info(
@@ -50,7 +54,7 @@ class FindNodesCommand extends Command {
             this.handleError(
                 handlerId,
                 `Unable to find enough node for ${networkProtocol}. Minimum replication factor: ${this.config.minimumReplicationFactor}`,
-                ERROR_TYPE.FIND_NODES_ERROR,
+                ERROR_TYPE.PUBLISH.PUBLISH_FIND_NODES_ERROR,
                 true,
             );
             return Command.empty();
@@ -114,7 +118,6 @@ class FindNodesCommand extends Command {
             name: 'findNodesCommand',
             delay: 0,
             transactional: false,
-            errorType: ERROR_TYPE.FIND_NODES_ERROR,
         };
         Object.assign(command, map);
         return command;

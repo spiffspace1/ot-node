@@ -67,12 +67,13 @@ class OperationService {
 
     async markOperationAsFailed(handlerId, message) {
         this.logger.info(`${this.operationName} for handlerId: ${handlerId} failed.`);
-        await this.updateRepositoryOperationStatus(handlerId, this.operationStatus.FAILED);
+        await this.updateRepositoryOperationStatus(handlerId, 'FAILED');
 
         await this.handlerIdService.updateHandlerIdStatus(
             handlerId,
             HANDLER_ID_STATUS.FAILED,
             message,
+            this.operationErrorType,
         );
     }
 

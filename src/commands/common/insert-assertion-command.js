@@ -8,6 +8,8 @@ class InsertAssertionCommand extends Command {
         this.tripleStoreModuleManager = ctx.tripleStoreModuleManager;
         this.fileService = ctx.fileService;
         this.handlerIdService = ctx.handlerIdService;
+
+        this.errorType = ERROR_TYPE.PUBLISH.PUBLISH_LOCAL_STORE_ERROR;
     }
 
     /**
@@ -43,7 +45,6 @@ class InsertAssertionCommand extends Command {
             this.tripleStoreModuleManager.insert(handlerIdData.data.join('\n'), dataGraphName),
             this.tripleStoreModuleManager.insert(assertionNquads.join('\n'), assertionGraphName),
         ];
-
 
         await Promise.all(insertPromises);
 

@@ -34,9 +34,7 @@ class HandleProtocolMessageCommand extends Command {
     }
 
     async handleError(handlerId, errorMessage, errorName, markFailed, commandData) {
-        this.logger.error({
-            msg: errorMessage,
-        });
+        this.logger.error(errorMessage);
 
         await this.networkModuleManager.sendMessageResponse(
             this.networkProtocol,

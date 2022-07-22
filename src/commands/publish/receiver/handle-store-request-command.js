@@ -1,8 +1,13 @@
 const HandleStoreCommand = require('./handle-store-command');
-const { NETWORK_MESSAGE_TYPES } = require('../../../constants/constants');
+const { NETWORK_MESSAGE_TYPES, ERROR_TYPE } = require('../../../constants/constants');
 
 class HandleStoreRequestCommand extends HandleStoreCommand {
-    async prepareMessage(commandData) {
+    constructor(ctx) {
+        super(ctx);
+        this.errorType = ERROR_TYPE.PUBLISH.PUBLISH_REMOTE_ERROR;
+    }
+
+    async prepareMessage() {
         return { messageType: NETWORK_MESSAGE_TYPES.RESPONSES.ACK, messageData: {} };
     }
 

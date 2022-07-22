@@ -9,6 +9,7 @@ class InsertStoreRequestCommand extends Command {
         this.fileService = ctx.fileService;
         this.handlerIdService = ctx.handlerIdService;
 
+        this.errorType = ERROR_TYPE.PUBLISH.PUBLISH_LOCAL_STORE_REMOTE_ERROR;
         this.publishService = ctx.publishService;
     }
 
@@ -59,17 +60,6 @@ class InsertStoreRequestCommand extends Command {
         return metadata[0].split(' ')[0];
     }
 
-    async handleError(handlerId, errorMessage, errorName, markFailed, commandData) {
-        await this.publishService.handleReceiverCommandError(
-            handlerId,
-            errorMessage,
-            errorName,
-            markFailed,
-            commandData,
-        );
-        return Command.empty();
-    }
-
     /**
      * Builds default insertAssertionCommand
      * @param map
@@ -80,7 +70,6 @@ class InsertStoreRequestCommand extends Command {
             name: 'insertStoreRequestCommand',
             delay: 0,
             transactional: false,
-            errorType: ERROR_TYPE.INSERT_ASSERTION_ERROR,
         };
         Object.assign(command, map);
         return command;

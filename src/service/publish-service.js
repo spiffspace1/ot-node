@@ -3,6 +3,7 @@ const {
     HANDLER_ID_STATUS,
     PUBLISH_REQUEST_STATUS,
     PUBLISH_STATUS,
+    ERROR_TYPE,
 } = require('../constants/constants');
 
 class PublishService extends OperationService {
@@ -12,6 +13,7 @@ class PublishService extends OperationService {
         this.operationName = 'resolve';
         this.operationRequestStatus = PUBLISH_REQUEST_STATUS;
         this.operationStatus = PUBLISH_STATUS;
+        this.operationErrorType = ERROR_TYPE.PUBLISH.PUBLISH_ERROR;
         this.completedStatuses = [
             HANDLER_ID_STATUS.PUBLISH.PUBLISH_REPLICATE_END,
             HANDLER_ID_STATUS.PUBLISH.PUBLISH_END,
